@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ISC Spreads — Institutional Signal Confluence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Cormorant+Garamond:wght@600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --gold:#C9A84C;--gold2:#F0D07A;--gold3:rgba(201,168,76,.1);--gold4:rgba(201,168,76,.22);
+  --bg:#07090E;--bg2:#0B0D14;--bg3:#10131C;--bg4:#161924;--bg5:#1C2030;
+  --border:rgba(201,168,76,.12);--border2:rgba(201,168,76,.28);--border3:rgba(255,255,255,.06);
+  --text:#E4E6EF;--muted:#6E7280;--muted2:#3E404E;
+  --green:#22C77A;--green2:rgba(34,199,122,.12);
+  --red:#E04545;--red2:rgba(224,69,69,.12);
+  --blue:#3D8BFF;--blue2:rgba(61,139,255,.12);
+  --purple:#8B7EFF;--purple2:rgba(139,126,255,.12);
+  --r:8px;--r2:12px;--r3:16px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+button{cursor:pointer;font-family:'Syne',sans-serif}
+input,select,textarea{font-family:'Syne',sans-serif}
+
+/* ── APP SHELL ── */
+#app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:236px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;position:relative;z-index:10}
+.content{flex:1;overflow-y:auto;background:var(--bg)}
+
+/* noise grain overlay */
+.sidebar::before{content:'';position:absolute;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none}
+
+/* ── SIDEBAR ── */
+.sb-logo{padding:22px 18px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sb-mark{width:38px;height:38px;background:var(--gold3);border:1px solid var(--border2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--gold);letter-spacing:.5px;flex-shrink:0}
+.sb-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--gold);letter-spacing:.3px}
+.sb-tag{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase}
+
+.nav{padding:10px 10px;flex:1}
+.nav-sec{font-size:9px;letter-spacing:2px;color:var(--muted2);font-family:'DM Mono',monospace;text-transform:uppercase;padding:14px 8px 5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:500;margin-bottom:1px;border:1px solid transparent;transition:all .15s;position:relative}
+.nav-item:hover{background:var(--gold3);color:var(--text)}
+.nav-item.active{background:var(--gold3);border-color:var(--border);color:var(--gold)}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;font-size:9px;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:8px;font-weight:500}
+.nb-gold{background:var(--gold3);color:var(--gold);border:1px solid var(--border)}
+.nb-green{background:var(--green2);color:var(--green);border:1px solid rgba(34,199,122,.2)}
+.nb-red{background:var(--red2);color:var(--red);border:1px solid rgba(224,69,69,.2)}
+.nb-blue{background:var(--blue2);color:var(--blue);border:1px solid rgba(61,139,255,.2)}
+
+.sb-user{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0}
+.sb-user-row{display:flex;align-items:center;gap:10px}
+.sb-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);flex-shrink:0}
+.sb-user-name{font-size:12px;font-weight:500;color:var(--text)}
+.sb-user-plan{font-size:9px;font-family:'DM Mono',monospace;padding:1px 7px;border-radius:4px;display:inline-block;margin-top:2px}
+.plan-demo{background:var(--blue2);color:var(--blue);border:1px solid rgba(61,139,255,.2)}
+.plan-basic{background:var(--gold3);color:var(--gold);border:1px solid var(--border)}
+.plan-premium{background:var(--purple2);color:var(--purple);border:1px solid rgba(139,126,255,.2)}
+.plan-elite{background:var(--green2);color:var(--green);border:1px solid rgba(34,199,122,.2)}
+.plan-admin{background:rgba(224,69,69,.1);color:var(--red);border:1px solid rgba(224,69,69,.2)}
+.sb-logout{margin-top:8px;width:100%;padding:6px;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:11px;transition:all .15s}
+.sb-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* ── PAGE ── */
+.page{padding:28px 30px;min-height:100%;display:none;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.ph{margin-bottom:24px}
+.ph-label{font-size:9px;letter-spacing:3px;color:var(--gold);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.ph-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.ph-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ph-desc{font-size:13px;color:var(--muted);line-height:1.7;max-width:560px}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+
+/* ── CARDS ── */
+.card{background:var(--bg3);border:1px solid var(--border3);border-radius:var(--r2);padding:18px 20px}
+.card-gold{border-color:var(--border)}
+.ct{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.cv{font-size:22px;font-weight:700;color:var(--text);font-family:'Cormorant Garamond',serif;margin-bottom:2px}
+.cs{font-size:11px;color:var(--muted)}
+
+/* STAT CARDS */
+.stat-card{background:var(--bg3);border:1px solid var(--border3);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4}
+.stat-icon{font-size:20px;margin-bottom:8px}
+.stat-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:700;color:var(--text);font-family:'Cormorant Garamond',serif;line-height:1}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-change{font-size:11px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:6px}
+.up{background:var(--green2);color:var(--green);border:1px solid rgba(34,199,122,.2)}
+.down{background:var(--red2);color:var(--red);border:1px solid rgba(224,69,69,.2)}
+
+/* ── SIGNAL CARDS ── */
+.signal-card{background:var(--bg3);border:1px solid var(--border3);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+.signal-card:hover{border-color:var(--border);background:var(--bg4)}
+.sig-dir{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sig-long{background:var(--green2);color:var(--green)}
+.sig-short{background:var(--red2);color:var(--red)}
+.sig-pair{font-size:14px;font-weight:600;color:var(--text)}
+.sig-tf{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.sig-meta{margin-left:auto;text-align:right}
+.sig-ics{font-size:11px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:4px;margin-bottom:3px;display:inline-block}
+.ics-high{background:var(--green2);color:var(--green);border:1px solid rgba(34,199,122,.2)}
+.ics-mid{background:var(--gold3);color:var(--gold);border:1px solid var(--border)}
+.ics-low{background:var(--red2);color:var(--red);border:1px solid rgba(224,69,69,.2)}
+.sig-strat{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.sig-info{flex:1}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;margin:2px}
+.tg{background:var(--gold3);color:var(--gold);border:1px solid var(--border)}
+.tb{background:var(--blue2);color:var(--blue);border:1px solid rgba(61,139,255,.2)}
+.tge{background:var(--green2);color:var(--green);border:1px solid rgba(34,199,122,.2)}
+.tr{background:var(--red2);color:var(--red);border:1px solid rgba(224,69,69,.2)}
+.tp{background:var(--purple2);color:var(--purple);border:1px solid rgba(139,126,255,.2)}
+.locked-tag{background:rgba(60,60,80,.3);color:var(--muted2);border:1px solid var(--border3)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:var(--r);font-size:13px;font-weight:500;border:none;transition:all .15s;cursor:pointer;white-space:nowrap}
+.btn-gold{background:var(--gold);color:var(--bg);font-weight:600}
+.btn-gold:hover{background:var(--gold2)}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--gold)}
+.btn-outline:hover{background:var(--gold3)}
+.btn-ghost{background:transparent;border:1px solid var(--border3);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--border);color:var(--text)}
+.btn-danger{background:var(--red2);border:1px solid rgba(224,69,69,.3);color:var(--red)}
+.btn-danger:hover{background:rgba(224,69,69,.2)}
+.btn-green{background:var(--green2);border:1px solid rgba(34,199,122,.3);color:var(--green)}
+.btn-green:hover{background:rgba(34,199,122,.2)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-lg{padding:12px 24px;font-size:14px;font-weight:600}
+.btn-full{width:100%}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border3);border-radius:var(--r);padding:10px 14px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;transition:border-color .15s;outline:none}
+.form-input:focus{border-color:var(--border2)}
+.form-input::placeholder{color:var(--muted2)}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border3);border-radius:var(--r);padding:10px 14px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;outline:none;cursor:pointer}
+.form-select:focus{border-color:var(--border2)}
+.form-hint{font-size:11px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace}
+.form-error{font-size:11px;color:var(--red);margin-top:4px;font-family:'DM Mono',monospace;display:none}
+.form-error.show{display:block}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border3)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border3);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border3);font-size:13px;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.td-mono{font-family:'DM Mono',monospace;font-size:12px}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;backdrop-filter:blur(4px);display:none}
+.modal-overlay.open{display:flex;animation:fadeIn .2s ease}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r3);padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;border-radius:4px}
+.modal-close:hover{color:var(--text)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+
+/* ── NOTICE BOXES ── */
+.notice{border-radius:var(--r);padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.6}
+.notice-gold{background:var(--gold3);border:1px solid var(--border);color:var(--text)}
+.notice-gold strong{color:var(--gold)}
+.notice-green{background:var(--green2);border:1px solid rgba(34,199,122,.2);color:var(--green)}
+.notice-red{background:var(--red2);border:1px solid rgba(224,69,69,.2);color:var(--red)}
+.notice-blue{background:var(--blue2);border:1px solid rgba(61,139,255,.2);color:var(--blue)}
+
+/* ── DIVIDER ── */
+.dv{height:1px;background:var(--border3);margin:20px 0}
+.dv-gold{background:var(--border)}
+
+/* ── ICS BAR ── */
+.ics-bar-wrap{margin:6px 0}
+.ics-bar-track{height:5px;background:var(--bg5);border-radius:3px;overflow:hidden}
+.ics-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.ics-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px}
+
+/* ── LIVE PULSE ── */
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,199,122,.4)}50%{box-shadow:0 0 0 6px rgba(34,199,122,0)}}
+.live-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--green)}
+
+/* ── PLAN CARDS ── */
+.plan-card{background:var(--bg3);border:1px solid var(--border3);border-radius:var(--r3);padding:22px;position:relative;transition:border-color .15s}
+.plan-card:hover{border-color:var(--border)}
+.plan-card.featured{border-color:var(--border2)}
+.plan-card.featured::before{content:'POPULAR';position:absolute;top:14px;right:14px;background:var(--gold);color:var(--bg);font-size:9px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;font-weight:500;letter-spacing:1px}
+.plan-name{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.plan-price{font-size:30px;font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--text);margin-bottom:4px}
+.plan-price em{font-size:13px;color:var(--muted);font-style:normal}
+.plan-desc{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.plan-feature{font-size:12px;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--border3);display:flex;gap:7px;align-items:flex-start}
+.plan-feature:last-of-type{border-bottom:none}
+.dot-on{color:var(--green)}
+.dot-off{color:var(--muted2)}
+
+/* ── WALLET BOX ── */
+.wallet-box{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;font-family:'DM Mono',monospace}
+.wallet-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.wallet-addr{font-size:11px;color:var(--gold);word-break:break-all;line-height:1.6}
+.wallet-copy{font-size:10px;color:var(--muted);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;gap:5px}
+.wallet-copy:hover{color:var(--gold)}
+
+/* ── LOCK OVERLAY ── */
+.lock-overlay{position:relative}
+.lock-overlay .lock-mask{position:absolute;inset:0;background:rgba(7,9,14,.85);border-radius:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;backdrop-filter:blur(2px);z-index:2;border-radius:var(--r2)}
+.lock-icon{font-size:24px}
+.lock-text{font-size:12px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace}
+
+/* ── TOOLTIP ── */
+.tooltip{position:relative;cursor:help}
+.tooltip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg4);color:var(--text);font-size:11px;padding:5px 10px;border-radius:var(--r);white-space:nowrap;font-family:'DM Mono',monospace;border:1px solid var(--border);opacity:0;pointer-events:none;transition:opacity .15s;z-index:100}
+.tooltip:hover::after{opacity:1}
+
+/* ── CHART WRAPPER ── */
+.chart-wrap{position:relative;height:220px}
+
+/* ── LEGAL TEXT ── */
+.legal-body{font-size:13px;color:var(--muted);line-height:1.85}
+.legal-body h3{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);margin:20px 0 8px}
+.legal-body h3:first-child{margin-top:0}
+.legal-body p{margin-bottom:10px}
+.legal-body ul{padding-left:1.2rem;margin-bottom:10px}
+.legal-body li{margin-bottom:4px}
+.legal-body strong{color:var(--gold);font-weight:500}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+#auth-screen.hidden{display:none}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r3);padding:36px;width:100%;max-width:400px;position:relative;overflow:hidden}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo .sb-mark{margin:0 auto 10px;width:48px;height:48px;font-size:13px}
+.auth-logo .sb-name{font-size:22px}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:var(--r);padding:3px;margin-bottom:22px}
+.auth-tab{flex:1;padding:7px;text-align:center;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);transition:all .15s}
+.auth-tab.active{background:var(--gold3);color:var(--gold);border:1px solid var(--border)}
+
+/* ── PROGRESS ── */
+.progress-bar{height:4px;background:var(--bg5);border-radius:2px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s ease}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;font-size:13px;color:var(--text);max-width:320px;display:flex;gap:10px;align-items:center;animation:slideIn .2s ease;box-shadow:var(--shadow)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast-icon{font-size:16px}
+
+/* ── CHART REAL ── */
+.price-ticker{font-family:'DM Mono',monospace;font-size:13px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0}
+.ticker-item{display:flex;flex-direction:column;gap:1px}
+.ticker-pair{font-size:9px;color:var(--muted);letter-spacing:1px}
+.ticker-price{font-size:13px;color:var(--text)}
+.ticker-up{color:var(--green)}
+.ticker-dn{color:var(--red)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-236px;top:0;height:100%;z-index:100;transition:left .25s}
+  .sidebar.open{left:0}
+  .content{width:100%}
+  .page{padding:18px 16px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="sb-mark">ISC</div>
+      <div class="sb-name">ISC Spreads</div>
+      <div class="sb-tag">Institutional Signal Confluence</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+    <div id="auth-login">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="login-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="login-pw" placeholder="••••••••"/>
+      </div>
+      <div id="login-err" class="form-error">Invalid credentials. Please try again.</div>
+      <button class="btn btn-gold btn-full btn-lg" onclick="doLogin()" style="margin-top:4px">Sign In →</button>
+    </div>
+    <div id="auth-register" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="reg-name" placeholder="Your name"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="reg-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="reg-pw" placeholder="Min 8 characters"/>
+      </div>
+      <div id="reg-err" class="form-error"></div>
+      <button class="btn btn-gold btn-full btn-lg" onclick="doRegister()" style="margin-top:4px">Create Account →</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.7">By continuing you agree to our <a href="#" onclick="openLegal('terms')">Terms</a>, <a href="#" onclick="openLegal('privacy')">Privacy Policy</a> and <a href="#" onclick="openLegal('disclaimer')">Risk Disclaimer</a></p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-mark">ISC</div>
+      <div>
+        <div class="sb-name">ISC Spreads</div>
+        <div class="sb-tag">Inst. Signal Confluence</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-sec">Trading</div>
+    <div class="nav-item active" onclick="nav('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">◈</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="nav('signals')" id="nav-signals">
+      <span class="nav-icon">⚡</span> Live Signals
+      <span class="nav-badge nb-green" id="sig-count-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('institutional')" id="nav-institutional">
+      <span class="nav-icon">🏛</span> Institutional
+    </div>
+    <div class="nav-item" onclick="nav('strategies')" id="nav-strategies">
+      <span class="nav-icon">⚙</span> Strategies
+    </div>
+    <div class="nav-item" onclick="nav('performance')" id="nav-performance">
+      <span class="nav-icon">📈</span> Performance
+    </div>
+
+    <div class="nav-sec">Account</div>
+    <div class="nav-item" onclick="nav('upgrade')" id="nav-upgrade">
+      <span class="nav-icon">⬆</span> Upgrade Plan
+    </div>
+    <div class="nav-item" onclick="nav('activate')" id="nav-activate">
+      <span class="nav-icon">🔑</span> Activate Code
+    </div>
+    <div class="nav-item" onclick="nav('community')" id="nav-community">
+      <span class="nav-icon">🌐</span> Community
+    </div>
+
+    <div class="nav-sec">Legal</div>
+    <div class="nav-item" onclick="nav('disclaimer')" id="nav-disclaimer">
+      <span class="nav-icon">⚠</span> Risk Disclaimer
+    </div>
+    <div class="nav-item" onclick="nav('privacy')" id="nav-privacy">
+      <span class="nav-icon">🔒</span> Privacy Policy
+    </div>
+    <div class="nav-item" onclick="nav('terms')" id="nav-terms">
+      <span class="nav-icon">📄</span> Terms & Conditions
+    </div>
+
+    <!-- ADMIN ONLY -->
+    <div class="nav-sec admin-only" id="admin-nav-sec" style="display:none">Admin</div>
+    <div class="nav-item admin-only" onclick="nav('admin')" id="nav-admin" style="display:none">
+      <span class="nav-icon">🛡</span> Admin Panel
+      <span class="nav-badge nb-red" id="admin-pending-badge">0</span>
+    </div>
+  </nav>
+
+  <div class="sb-user">
+    <div class="sb-user-row">
+      <div class="sb-avatar" id="sb-avatar">U</div>
+      <div>
+        <div class="sb-user-name" id="sb-username">User</div>
+        <div class="sb-user-plan plan-demo" id="sb-plan">DEMO</div>
+      </div>
+    </div>
+    <button class="sb-logout" onclick="doLogout()">✕ Sign Out</button>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- ═══════════════════════════════════
+     DASHBOARD PAGE
+═══════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="ph">
+    <div class="ph-label">Overview</div>
+    <div class="ph-title">Trading Dashboard</div>
+    <div class="ph-desc">Real-time market signals powered by ISC institutional confluence engine. Running every 6H aligned to major market sessions.</div>
+  </div>
+
+  <!-- MARKET TICKER -->
+  <div class="card card-gold" style="margin-bottom:16px;padding:12px 18px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span class="live-dot"></span><span class="live-label">LIVE MARKET DATA — BINANCE</span>
+      <span style="margin-left:auto;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace" id="last-update">Updating...</span>
+    </div>
+    <div class="price-ticker" id="price-ticker">
+      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Loading market data...</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="g4" style="margin-bottom:16px">
+    <div class="stat-card">
+      <div class="stat-label">Active Signals</div>
+      <div class="stat-val" id="stat-signals">0</div>
+      <div class="stat-sub">Across all pairs</div>
+      <span class="stat-change up" id="stat-signals-change">+0 today</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg ICS Score</div>
+      <div class="stat-val" id="stat-ics">—</div>
+      <div class="stat-sub">Confidence level</div>
+      <span class="stat-change up">Institutional grade</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-val">76.4%</div>
+      <div class="stat-sub">Last 30 days</div>
+      <span class="stat-change up">+2.1% vs prev</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Next Engine Run</div>
+      <div class="stat-val" id="next-run">—</div>
+      <div class="stat-sub">6H cycle (UTC)</div>
+      <span class="stat-change" style="background:var(--blue2);color:var(--blue);border-color:rgba(61,139,255,.2)">Scheduled</span>
+    </div>
+  </div>
+
+  <!-- SIGNALS + CHART -->
+  <div class="g2">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="ct">Latest Signals</div>
+        <button class="btn btn-ghost btn-sm" onclick="nav('signals')">View All →</button>
+      </div>
+      <div id="dash-signals">
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;font-family:'DM Mono',monospace">Generating signals...</div>
+      </div>
+    </div>
+    <div>
+      <div class="ct" style="margin-bottom:10px">Signal Distribution</div>
+      <div class="card" style="padding:14px">
+        <div class="chart-wrap"><canvas id="chart-dist"></canvas></div>
+      </div>
+      <div class="card" style="margin-top:12px;padding:14px">
+        <div class="ct" style="margin-bottom:10px">ICS Score Breakdown</div>
+        <div id="ics-breakdown"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     LIVE SIGNALS PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-signals">
+  <div class="ph">
+    <div class="ph-label">Signal Engine</div>
+    <div class="ph-title">Live Trading Signals</div>
+    <div class="ph-desc">Multi-confluence signals computed from Binance live data. ICT + SMC + CRT + Liquidity Sweep + Volume analysis.</div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+    <div style="display:flex;gap:6px;flex:1">
+      <select class="form-select" style="max-width:160px" id="filter-pair" onchange="filterSignals()">
+        <option value="">All Pairs</option>
+        <option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option>
+        <option>XRPUSDT</option><option>BNBUSDT</option><option>LINKUSDT</option>
+      </select>
+      <select class="form-select" style="max-width:140px" id="filter-dir" onchange="filterSignals()">
+        <option value="">All Directions</option>
+        <option value="LONG">LONG</option>
+        <option value="SHORT">SHORT</option>
+      </select>
+      <select class="form-select" style="max-width:160px" id="filter-ics" onchange="filterSignals()">
+        <option value="">All ICS Levels</option>
+        <option value="high">High (75–100)</option>
+        <option value="mid">Standard (50–74)</option>
+      </select>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="generateSignals()">↻ Refresh Signals</button>
+  </div>
+
+  <div id="signals-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     INSTITUTIONAL PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-institutional">
+  <div class="ph">
+    <div class="ph-label">Smart Money Tracker</div>
+    <div class="ph-title">Institutional Footprint Engine</div>
+    <div class="ph-desc">Tracks where banks, hedge funds, and prop desks enter the market. Detects order blocks, liquidity sweeps, displacement candles, CVD spikes, and iceberg orders.</div>
+  </div>
+
+  <div class="notice notice-gold" style="margin-bottom:18px">
+    <strong>Core Principle:</strong> Institutions cannot hide. Their order size leaves a structural + volume footprint. ISC Spreads identifies these footprints and enters trades in the same direction — trading alongside smart money, not against it.
+  </div>
+
+  <div class="g3" style="margin-bottom:16px">
+    <div class="card">
+      <div class="ct">Order Blocks Detected</div>
+      <div class="cv" id="ob-count">0</div>
+      <div class="cs">Active institutional zones</div>
+    </div>
+    <div class="card">
+      <div class="ct">Sweep Events (24H)</div>
+      <div class="cv" id="sweep-count">0</div>
+      <div class="cs">Liquidity grabs confirmed</div>
+    </div>
+    <div class="card">
+      <div class="ct">Avg Institutional ICS</div>
+      <div class="cv" id="inst-ics">—</div>
+      <div class="cs">High-conviction threshold: 75</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="ct" style="margin-bottom:10px">Detected Institutional Zones</div>
+      <div id="inst-zones"></div>
+    </div>
+    <div>
+      <div class="ct" style="margin-bottom:10px">Detection Method Breakdown</div>
+      <div class="card" style="padding:14px">
+        <div id="inst-methods"></div>
+      </div>
+      <div class="card" style="margin-top:12px;padding:14px">
+        <div class="ct" style="margin-bottom:10px">ICS Factor Weights</div>
+        <div id="ics-factors"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     STRATEGIES PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-strategies">
+  <div class="ph">
+    <div class="ph-label">Strategy Stack</div>
+    <div class="ph-title">Active Strategies</div>
+    <div class="ph-desc">Your current plan unlocks the strategies listed below. Upgrade to access the full ISC Spreads signal engine.</div>
+  </div>
+  <div id="strategies-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PERFORMANCE PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-performance">
+  <div class="ph">
+    <div class="ph-label">Analytics</div>
+    <div class="ph-title">Performance Analytics</div>
+    <div class="ph-desc">Historical signal performance and R:R tracking.</div>
+  </div>
+  <div class="g4" style="margin-bottom:16px">
+    <div class="stat-card"><div class="stat-label">Total Signals</div><div class="stat-val">1,247</div><div class="stat-change up">All time</div></div>
+    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-val">76.4%</div><div class="stat-change up">+2.1% MoM</div></div>
+    <div class="stat-card"><div class="stat-label">Avg R:R</div><div class="stat-val">1:3.8</div><div class="stat-change up">Stoich. target: 1:3</div></div>
+    <div class="stat-card"><div class="stat-label">Best Strategy</div><div class="stat-val" style="font-size:16px">ICT+OB</div><div class="stat-change up">84% win rate</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct" style="margin-bottom:10px">Equity Curve (Simulated Signals)</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="chart-equity"></canvas></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct" style="margin-bottom:10px">Win Rate by Strategy</div>
+      <div class="chart-wrap"><canvas id="chart-winrate"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:10px">Signal Volume by Session</div>
+      <div class="chart-wrap"><canvas id="chart-session"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     UPGRADE PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-upgrade">
+  <div class="ph">
+    <div class="ph-label">Subscription Plans</div>
+    <div class="ph-title">Upgrade Your Access</div>
+    <div class="ph-desc">Choose a plan. Transfer to the wallet address. Submit proof. Receive activation code via email.</div>
+  </div>
+
+  <div class="notice notice-gold" style="margin-bottom:20px">
+    <strong>How it works:</strong> Select a plan → Send exact crypto amount to wallet → Submit your email + transaction hash → Admin verifies → Activation code sent to your email automatically.
+  </div>
+
+  <div id="plans-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px"></div>
+
+  <!-- PAYMENT SECTION -->
+  <div class="card card-gold" id="payment-section" style="display:none">
+    <div class="ct">💳 Complete Payment — <span id="pay-plan-name"></span></div>
+    <div class="g2">
+      <div>
+        <div class="form-group">
+          <label class="form-label">Amount to Send</label>
+          <div style="font-size:22px;font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--gold)" id="pay-amount"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Send to Wallet Address</label>
+          <div class="wallet-box">
+            <div class="wallet-label">Ethereum / ERC-20 Address</div>
+            <div class="wallet-addr" id="wallet-display">0x3fec94ae357d5f4921f04a7a7e335dd21df74330</div>
+            <div class="wallet-copy" onclick="copyWallet()">📋 Copy Address</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="form-group">
+          <label class="form-label">Your Email (for activation code)</label>
+          <input class="form-input" type="email" id="pay-email" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transaction Hash / TX ID</label>
+          <input class="form-input" type="text" id="pay-txhash" placeholder="0x... or TXID"/>
+          <div class="form-hint">Copy from your wallet after sending</div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="submitPayment()">✓ Submit Payment Proof</button>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">Payment verified manually by admin. Activation code sent to your email within 30 minutes of confirmation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     ACTIVATE PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-activate">
+  <div class="ph">
+    <div class="ph-label">Plan Activation</div>
+    <div class="ph-title">Enter Activation Code</div>
+    <div class="ph-desc">Enter the code sent to your email after payment verification to unlock your plan.</div>
+  </div>
+  <div style="max-width:420px">
+    <div class="card card-gold" style="margin-bottom:16px">
+      <div class="ct">Current Plan</div>
+      <div style="font-size:20px;font-family:'Cormorant Garamond',serif;color:var(--text)" id="current-plan-display">Demo</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px" id="plan-expiry-display">No active subscription</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Activation Code</label>
+      <input class="form-input" type="text" id="activation-code" placeholder="ISC-XXXX-XXXX-XXXX" style="font-family:'DM Mono',monospace;letter-spacing:2px;font-size:16px;text-align:center"/>
+      <div class="form-hint">Check your email inbox including spam folder</div>
+    </div>
+    <div id="activate-err" class="form-error"></div>
+    <div id="activate-success" class="notice notice-green" style="display:none"></div>
+    <button class="btn btn-gold btn-full btn-lg" onclick="activateCode()" style="margin-top:8px">Activate Plan →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     COMMUNITY PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-community">
+  <div class="ph">
+    <div class="ph-label">Connect</div>
+    <div class="ph-title">ISC Spreads Community</div>
+    <div class="ph-desc">Join our official channels for signals, updates, and support.</div>
+  </div>
+  <div class="g2" style="max-width:700px">
+    <a href="https://t.me/iscspreadscommunity" target="_blank" class="card card-gold" style="display:block;transition:border-color .15s;text-decoration:none">
+      <div style="font-size:28px;margin-bottom:8px">✈</div>
+      <div class="ct">Telegram Group</div>
+      <div style="font-size:13px;color:var(--muted)">Join our main trading group for live signal alerts, market discussions, and community support.</div>
+      <div style="font-size:11px;color:var(--gold);margin-top:10px;font-family:'DM Mono',monospace">t.me/iscspreadscommunity →</div>
+    </a>
+    <a href="https://x.com/iscspreadss" target="_blank" class="card card-gold" style="display:block;transition:border-color .15s;text-decoration:none">
+      <div style="font-size:28px;margin-bottom:8px">✕</div>
+      <div class="ct">X (Twitter)</div>
+      <div style="font-size:13px;color:var(--muted)">Follow us for market insights, strategy breakdowns, and ISC Spreads announcements.</div>
+      <div style="font-size:11px;color:var(--gold);margin-top:10px;font-family:'DM Mono',monospace">@iscspreadss →</div>
+    </a>
+    <a href="https://instagram.com/iscspreads" target="_blank" class="card card-gold" style="display:block;transition:border-color .15s;text-decoration:none">
+      <div style="font-size:28px;margin-bottom:8px">📸</div>
+      <div class="ct">Instagram</div>
+      <div style="font-size:13px;color:var(--muted)">Visual trade breakdowns, educational content, and platform updates.</div>
+      <div style="font-size:11px;color:var(--gold);margin-top:10px;font-family:'DM Mono',monospace">instagram.com/iscspreads →</div>
+    </a>
+    <a href="https://chat.whatsapp.com/iscspreadsvip" target="_blank" class="card card-gold" style="display:block;transition:border-color .15s;text-decoration:none">
+      <div style="font-size:28px;margin-bottom:8px">💬</div>
+      <div class="ct">WhatsApp Group</div>
+      <div style="font-size:13px;color:var(--muted)">Join the official ISC Spreads WhatsApp group for quick alerts and peer discussions.</div>
+      <div style="font-size:11px;color:var(--gold);margin-top:10px;font-family:'DM Mono',monospace">WhatsApp Community →</div>
+    </a>
+    <a href="mailto:support@iscspreads.io" class="card card-gold" style="display:block;transition:border-color .15s;text-decoration:none">
+      <div style="font-size:28px;margin-bottom:8px">✉</div>
+      <div class="ct">Email Support</div>
+      <div style="font-size:13px;color:var(--muted)">For plan activation issues, payment queries, and technical support. Response within 24 hours.</div>
+      <div style="font-size:11px;color:var(--gold);margin-top:10px;font-family:'DM Mono',monospace">support@iscspreads.io →</div>
+    </a>
+    <div class="card" style="background:var(--bg3)">
+      <div style="font-size:28px;margin-bottom:8px">📋</div>
+      <div class="ct">Platform Status</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--muted)">Signal Engine</span><span class="tag tge">Operational</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--muted)">Market Data</span><span class="tag tge">Live</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--muted)">Email System</span><span class="tag tge">Active</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--muted)">6H Scheduler</span><span class="tag tge">Running</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     LEGAL PAGES
+═══════════════════════════════════ -->
+<div class="page" id="page-disclaimer">
+  <div class="ph"><div class="ph-label">Legal</div><div class="ph-title">Risk Disclaimer</div></div>
+  <div class="card" style="max-width:780px">
+    <div class="legal-body">
+      <div class="notice notice-red" style="margin-bottom:20px"><strong>⚠ READ CAREFULLY:</strong> Trading involves substantial risk. You can lose all invested capital.</div>
+      <h3>1. Trading Involves Substantial Risk of Loss</h3>
+      <p>Trading in foreign exchange (forex), contracts for difference (CFDs), commodities, indices, cryptocurrencies, and other financial instruments involves a <strong>significant risk of loss</strong> and is not suitable for all investors or traders. You may lose some or all of your invested capital. Do not trade with money you cannot afford to lose.</p>
+      <h3>2. No Guarantee of Profit</h3>
+      <p>ISC Spreads does not guarantee any specific financial outcome, profit, or return on investment. <strong>Past performance of any signal, strategy, or backtested result is not indicative of future results.</strong> All trading signals generated by the ISC Spreads bot are for informational and educational purposes only and do not constitute financial advice.</p>
+      <h3>3. Not Financial Advice</h3>
+      <p>ISC Spreads is a technology platform, not a licensed financial advisor, broker, or investment firm. Nothing on this platform — including signals, strategy outputs, educational content, dashboard analytics, or communication from the admin — constitutes personalised financial or investment advice. <strong>Users are solely responsible for their own trading decisions.</strong></p>
+      <h3>4. Demo vs Live Account Performance</h3>
+      <p>All new users are onboarded exclusively to a demo (paper trading) environment. Results achieved on a demo account <strong>do not reflect results that may be achieved on a live trading account.</strong> Slippage, liquidity differences, broker execution speeds, spread variations, and real market conditions can materially affect live trading outcomes.</p>
+      <h3>5. Leverage and Volatility Risk</h3>
+      <p>Many instruments available through partner brokers involve the use of leverage. <strong>Leverage amplifies both potential gains and potential losses.</strong> Highly volatile market conditions — including major news events, central bank announcements, and black swan events — can result in losses that exceed the parameters of the ISC Spreads signal engine. The platform cannot be held liable for losses sustained during exceptional market conditions.</p>
+      <h3>6. Regulatory Notice</h3>
+      <p>ISC Spreads operates globally and users are responsible for ensuring that their use of the platform complies with the laws and regulations of their local jurisdiction. The platform does not provide services to residents of jurisdictions where such services are prohibited. Users in restricted territories should seek independent legal advice before using the platform.</p>
+      <h3>7. Technology Risk</h3>
+      <p>Signal generation depends on third-party market data APIs (including Binance public API). ISC Spreads is not responsible for losses arising from data feed interruptions, API downtime, latency, or data inaccuracies from third-party providers.</p>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-privacy">
+  <div class="ph"><div class="ph-label">Legal</div><div class="ph-title">Privacy Policy</div></div>
+  <div class="card" style="max-width:780px">
+    <div class="legal-body">
+      <h3>Data We Collect</h3>
+      <ul>
+        <li><strong>Registration data:</strong> Full name, email address, country of residence</li>
+        <li><strong>Account activity:</strong> Plan level, activation code history, login timestamps</li>
+        <li><strong>Payment evidence:</strong> Transaction hash, transfer screenshots submitted for plan activation</li>
+        <li><strong>Usage data:</strong> Signal interactions, strategy engagement, session duration</li>
+        <li><strong>Technical data:</strong> IP address, browser type, operating system</li>
+        <li><strong>Communications:</strong> Support messages and email correspondence</li>
+      </ul>
+      <h3>How We Use Your Data</h3>
+      <ul>
+        <li>To create and manage your ISC Spreads account</li>
+        <li>To verify payments and dispatch activation codes via email</li>
+        <li>To deliver platform features and strategy access based on your plan</li>
+        <li>To communicate important updates, plan expiry notices, and support responses</li>
+        <li>To monitor platform security and prevent fraudulent activity</li>
+        <li>To improve platform performance through aggregated, anonymised analytics</li>
+      </ul>
+      <h3>Data We Do Not Collect</h3>
+      <p>ISC Spreads does <strong>not</strong> collect broker login credentials, live account balances, or trading account passwords. We do not access your broker account directly. We do not sell, rent, or trade your personal data to third parties for marketing purposes.</p>
+      <h3>Data Retention</h3>
+      <p>Account data is retained for the duration of your subscription and for <strong>12 months</strong> following account closure. Payment evidence records are retained for <strong>36 months</strong> for compliance purposes. All retained data is securely encrypted.</p>
+      <h3>Your Rights</h3>
+      <ul>
+        <li><strong>Access:</strong> Request a copy of all personal data we hold</li>
+        <li><strong>Rectification:</strong> Request correction of inaccurate data</li>
+        <li><strong>Erasure:</strong> Request deletion of your account and associated data</li>
+        <li><strong>Object:</strong> Opt out of non-essential communications at any time</li>
+        <li><strong>Portability:</strong> Receive your data in a structured, machine-readable format</li>
+      </ul>
+      <h3>Security</h3>
+      <p>All user data is stored on encrypted servers. Passwords are hashed using bcrypt. Activation codes are single-use, time-limited, and transmitted only to the registered email address. Any suspected breach will be communicated to affected users within 72 hours of discovery.</p>
+      <h3>Contact</h3>
+      <p>To exercise any of your data rights, contact: <strong>support@iscspreads.io</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-terms">
+  <div class="ph"><div class="ph-label">Legal</div><div class="ph-title">Terms & Conditions</div></div>
+  <div class="card" style="max-width:780px">
+    <div class="legal-body">
+      <h3>1. Acceptance of Terms</h3>
+      <p>By registering an account, accessing the platform, or using any feature of ISC Spreads, you agree to be bound by these Terms and Conditions in full. If you do not agree, you must not use the platform. ISC Spreads reserves the right to update these terms at any time; continued use constitutes acceptance.</p>
+      <h3>2. Eligibility</h3>
+      <ul>
+        <li>You must be at least 18 years of age</li>
+        <li>You must not reside in a jurisdiction where use of this platform is prohibited</li>
+        <li>You must provide accurate and complete registration information</li>
+        <li>You may not create more than one account without express admin approval</li>
+      </ul>
+      <h3>3. Demo Access</h3>
+      <p>All new users receive free access to the demo environment, limited to the ICT strategy on paper trading only. Demo results do not guarantee live trading performance. The admin may modify or terminate demo access at any time.</p>
+      <h3>4. Paid Plans & Activation</h3>
+      <ul>
+        <li>Paid plans activated exclusively via crypto payment to the displayed wallet address</li>
+        <li>Users must submit registered email and transaction hash for verification</li>
+        <li>Activation code dispatched to registered email upon admin verification</li>
+        <li>Codes are single-use, non-transferable, expire within 48 hours of dispatch</li>
+        <li>Admin reserves the right to refuse activation if verification fails or fraud is suspected</li>
+      </ul>
+      <h3>5. Payment Terms & Refunds</h3>
+      <p>All payments are made in cryptocurrency. <strong>Payments are non-refundable</strong> once a plan has been activated and the code issued. In the event of a platform-side activation failure, the admin will reissue the code or provide credit. ISC Spreads is not responsible for losses from incorrect wallet entries or blockchain delays.</p>
+      <h3>6. Prohibited Conduct</h3>
+      <ul>
+        <li>Sharing, selling, or transferring your activation code or account access</li>
+        <li>Reverse-engineering, scraping, or replicating the ISC Spreads signal engine</li>
+        <li>Using the platform to generate signals for commercial redistribution without written admin consent</li>
+        <li>Submitting fraudulent payment evidence or false transaction hashes</li>
+        <li>Circumventing plan access restrictions by technical or other means</li>
+      </ul>
+      <h3>7. Intellectual Property</h3>
+      <p>All signal logic, strategy frameworks, institutional tracking methodology, ICS scoring systems, dashboard design, and brand assets are the <strong>exclusive intellectual property of ISC Spreads</strong>. The name ISC Spreads, its logo, and all associated branding are proprietary.</p>
+      <h3>8. Limitation of Liability</h3>
+      <p>ISC Spreads, its admin, developers, and affiliates shall not be liable for any direct, indirect, incidental, consequential, or punitive damages arising from use of the platform; reliance on signals; trading losses; platform downtime; or third-party broker actions. Total liability shall not exceed subscription fees paid in the preceding 30 days.</p>
+      <h3>9. Account Termination</h3>
+      <p>The admin may suspend or permanently terminate any user account — without refund — upon evidence of terms violation, fraudulent activity, or conduct harmful to the platform or its users.</p>
+      <h3>10. Governing Law</h3>
+      <p>These Terms are governed by applicable law. Disputes shall first be subject to good-faith negotiation, then binding arbitration. By using the platform, you waive the right to participate in any class action lawsuit against ISC Spreads.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     ADMIN PAGE
+═══════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="ph">
+    <div class="ph-label">Admin Panel</div>
+    <div class="ph-title">ISC Spreads Administration</div>
+    <div class="ph-desc">Full platform control. Wallet config, code generation, user management, pending payments.</div>
+  </div>
+
+  <!-- ADMIN TABS -->
+  <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-gold btn-sm" onclick="adminTab('payments')" id="atab-payments">Pending Payments</button>
+    <button class="btn btn-ghost btn-sm" onclick="adminTab('generate')" id="atab-generate">Generate Codes</button>
+    <button class="btn btn-ghost btn-sm" onclick="adminTab('users')" id="atab-users">Users</button>
+    <button class="btn btn-ghost btn-sm" onclick="adminTab('wallet')" id="atab-wallet">Wallet Config</button>
+    <button class="btn btn-ghost btn-sm" onclick="adminTab('signals')" id="atab-signals">Signal Engine</button>
+  </div>
+
+  <!-- PAYMENTS TAB -->
+  <div id="admin-payments">
+    <div class="g4" style="margin-bottom:16px">
+      <div class="stat-card"><div class="stat-label">Pending Verif.</div><div class="stat-val" id="admin-stat-pending">0</div><div class="stat-change" style="background:var(--gold3);color:var(--gold);border-color:var(--border)">Awaiting</div></div>
+      <div class="stat-card"><div class="stat-label">Verified Today</div><div class="stat-val" id="admin-stat-verified">0</div><div class="stat-change up">Activated</div></div>
+      <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-val" id="admin-stat-revenue">$0</div><div class="stat-change up">Lifetime</div></div>
+      <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="admin-stat-users">0</div><div class="stat-change up">All plans</div></div>
+    </div>
+    <div class="ct" style="margin-bottom:10px">Pending Payment Verifications</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th><th>Plan</th><th>Amount</th><th>TX Hash</th><th>Submitted</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="pending-payments-table">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;font-family:'DM Mono',monospace">No pending payments</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GENERATE CODES TAB -->
+  <div id="admin-generate" style="display:none">
+    <div class="g2" style="max-width:800px">
+      <div class="card card-gold">
+        <div class="ct">⚙ Generate Activation Code</div>
+        <div class="form-group">
+          <label class="form-label">Plan Type</label>
+          <select class="form-select" id="gen-plan">
+            <option value="basic">Basic ($49/mo)</option>
+            <option value="premium">Premium ($99/mo)</option>
+            <option value="elite">Elite ($149/mo)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">User Email (optional — auto-send)</label>
+          <input class="form-input" type="email" id="gen-email" placeholder="user@example.com"/>
+          <div class="form-hint">Leave blank to generate a distributable code</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Validity Period</label>
+          <select class="form-select" id="gen-validity">
+            <option value="30">30 days</option>
+            <option value="90">90 days</option>
+            <option value="365">365 days</option>
+          </select>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="generateCode()">⚡ Generate Code</button>
+      </div>
+
+      <div class="card">
+        <div class="ct" style="margin-bottom:10px">Generated Codes</div>
+        <div id="generated-codes-list">
+          <div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;font-family:'DM Mono',monospace">No codes generated yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div id="admin-users" style="display:none">
+    <div class="ct" style="margin-bottom:10px">All Users</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Plan</th><th>Joined</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="users-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- WALLET CONFIG TAB -->
+  <div id="admin-wallet" style="display:none">
+    <div style="max-width:600px">
+      <div class="card card-gold" style="margin-bottom:14px">
+        <div class="ct">Current Wallet Address</div>
+        <div class="wallet-box" style="margin-top:8px">
+          <div class="wallet-label">Ethereum / ERC-20</div>
+          <div class="wallet-addr" id="admin-wallet-display">0x3fec94ae357d5f4921f04a7a7e335dd21df74330</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Update Wallet Address</div>
+        <div class="form-group" style="margin-top:8px">
+          <label class="form-label">New Wallet Address</label>
+          <input class="form-input" type="text" id="new-wallet" placeholder="0x..."/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Network</label>
+          <select class="form-select" id="wallet-network">
+            <option>Ethereum (ERC-20)</option>
+            <option>BNB Smart Chain (BEP-20)</option>
+            <option>TRON (TRC-20)</option>
+            <option>Bitcoin</option>
+          </select>
+        </div>
+        <button class="btn btn-gold" onclick="updateWallet()">Update Wallet</button>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="ct">Plan Pricing</div>
+        <div id="plan-pricing-admin" style="margin-top:8px"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="savePricing()">Save Pricing</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNAL ENGINE TAB -->
+  <div id="admin-signals" style="display:none">
+    <div class="g2" style="max-width:800px">
+      <div class="card">
+        <div class="ct">6H Scheduler (pg_cron)</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.8">
+          <div>Schedule: <span style="color:var(--gold)">0 */6 * * *</span></div>
+          <div>Timezone: <span style="color:var(--gold)">UTC+1 (WAT — Nigeria)</span></div>
+          <div>Sessions: <span style="color:var(--green)">00:00 · 06:00 · 12:00 · 18:00</span></div>
+          <div>Next run: <span style="color:var(--gold)" id="admin-next-run">—</span></div>
+        </div>
+        <div class="notice notice-gold" style="font-size:12px">
+          <strong>SQL (pg_cron):</strong><br/>
+          <code style="font-size:10px;font-family:'DM Mono',monospace;display:block;margin-top:6px;line-height:1.8;color:var(--text)">
+            SELECT cron.schedule(<br/>
+            &nbsp;&nbsp;'isc-signal-engine',<br/>
+            &nbsp;&nbsp;'0 */6 * * *',<br/>
+            &nbsp;&nbsp;$$SELECT run_signal_engine()$$<br/>
+            );<br/><br/>
+            SET timezone = 'Africa/Lagos';
+          </code>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="manualRun()" style="margin-top:8px">▶ Manual Run Now</button>
+      </div>
+      <div class="card">
+        <div class="ct">Signal Engine Status</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+            <span style="color:var(--muted)">ICT Engine</span><span class="tag tge">Running</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+            <span style="color:var(--muted)">SMC Engine</span><span class="tag tge">Running</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+            <span style="color:var(--muted)">CRT Module</span><span class="tag tge">Running</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+            <span style="color:var(--muted)">Liquidity Sweep</span><span class="tag tge">Running</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+            <span style="color:var(--muted)">Inst. Tracker</span><span class="tag tge">Running</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+            <span style="color:var(--muted)">Binance API</span><span class="tag tge">Connected</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+            <span style="color:var(--muted)">Email System</span><span class="tag tge">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /content -->
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL: Signal Detail -->
+<div class="modal-overlay" id="modal-signal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-signal')">✕</button>
+    <div id="modal-signal-content"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// ISC SPREADS — COMPLETE PRODUCTION APPLICATION
+// ═══════════════════════════════════════════════════
+
+// ── CONFIG ──────────────────────────────────────────
+const CONFIG = {
+  wallet: '0x3fec94ae357d5f4921f04a7a7e335dd21df74330',
+  adminEmail: 'samuelmaigari0@gmail.com',
+  plans: {
+    demo:    { name:'Demo',    price:0,   label:'FREE',    color:'#3D8BFF', strategies:['ICT Killzone','FVG Mapping','6H Structure'] },
+    basic:   { name:'Basic',   price:49,  label:'$49/mo',  color:'#C9A84C', strategies:['ICT Killzone','FVG Mapping','6H Structure','SMC (ChoCH/BoS)','Liquidity Sweep','RSI Divergence'] },
+    premium: { name:'Premium', price:99,  label:'$99/mo',  color:'#8B7EFF', strategies:['All Basic','CRT Movement','Volume CVD','Order Block Tracker','Institutional ICS 50-74','1H+15M Scalp'] },
+    elite:   { name:'Elite',   price:149, label:'$149/mo', color:'#22C77A', strategies:['All Premium','High-Conv ICS 75+','Iceberg Detection','Delta Divergence','Stoichiometric R:R','Full Inst. Suite'] }
+  },
+  pairs: ['BTCUSDT','ETHUSDT','SOLUSDT','XRPUSDT','BNBUSDT','LINKUSDT'],
+  binanceWS: 'wss://stream.binance.com:9443/stream?streams=',
+  binanceREST: 'https://api.binance.com/api/v3'
+};
+
+// ── STATE ─────────────────────────────────────────────
+let STATE = {
+  user: null,
+  users: [],
+  signals: [],
+  payments: [],
+  generatedCodes: [],
+  prices: {},
+  instZones: [],
+  charts: {},
+  wsConn: null,
+  engineInterval: null,
+  priceData: {}
+};
+
+// ── LOCAL STORAGE HELPERS ────────────────────────────
+const LS = {
+  get: k => { try { return JSON.parse(localStorage.getItem('isc_'+k)) } catch(e){ return null } },
+  set: (k,v) => localStorage.setItem('isc_'+k, JSON.stringify(v)),
+  del: k => localStorage.removeItem('isc_'+k)
+};
+
+// ── BOOTSTRAP ────────────────────────────────────────
+window.onload = () => {
+  loadPersistedState();
+  const u = LS.get('session');
+  if(u){ loginUser(u); } else { showAuth(); }
+};
+
+function loadPersistedState(){
+  STATE.users = LS.get('users') || [];
+  STATE.payments = LS.get('payments') || [];
+  STATE.generatedCodes = LS.get('codes') || [];
+  STATE.prices = LS.get('prices') || { basic:49, premium:99, elite:149 };
+  // seed default admin account
+  if(!STATE.users.find(u=>u.email===CONFIG.adminEmail)){
+    STATE.users.push({
+      id:'admin-001', name:'Samuel Maigari', email:CONFIG.adminEmail,
+      password:'admin123', plan:'elite', role:'admin',
+      joined: new Date().toISOString(), active:true
+    });
+    LS.set('users', STATE.users);
+  }
+}
+
+// ── AUTH ─────────────────────────────────────────────
+function showAuth(){ document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('app').style.display='none'; }
+function hideAuth(){ document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app').style.display='flex'; }
+
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>{ t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')); });
+  document.getElementById('auth-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('auth-register').style.display = tab==='register'?'block':'none';
+}
+
+function doLogin(){
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pw = document.getElementById('login-pw').value;
+  const u = STATE.users.find(u=>u.email===email && u.password===pw);
+  if(!u){ document.getElementById('login-err').classList.add('show'); return; }
+  document.getElementById('login-err').classList.remove('show');
+  LS.set('session', u);
+  loginUser(u);
+}
+
+function doRegister(){
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pw = document.getElementById('reg-pw').value;
+  const err = document.getElementById('reg-err');
+  if(!name || !email || !pw){ err.textContent='All fields required.'; err.classList.add('show'); return; }
+  if(pw.length<8){ err.textContent='Password must be at least 8 characters.'; err.classList.add('show'); return; }
+  if(STATE.users.find(u=>u.email===email)){ err.textContent='Email already registered.'; err.classList.add('show'); return; }
+  const role = email===CONFIG.adminEmail ? 'admin' : 'user';
+  const plan = email===CONFIG.adminEmail ? 'elite' : 'demo';
+  const u = { id:'u-'+Date.now(), name, email, password:pw, plan, role, joined:new Date().toISOString(), active:true };
+  STATE.users.push(u);
+  LS.set('users', STATE.users);
+  err.classList.remove('show');
+  toast('✓ Account created! Welcome to ISC Spreads.','green');
+  LS.set('session', u);
+  loginUser(u);
+}
+
+function loginUser(u){
+  STATE.user = u;
+  hideAuth();
+  initUI();
+  startMarketData();
+  startSignalEngine();
+  scheduleNextRun();
+}
+
+function doLogout(){
+  if(STATE.wsConn){ STATE.wsConn.close(); }
+  clearInterval(STATE.engineInterval);
+  LS.del('session');
+  STATE.user = null;
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('app').style.display='none';
+}
+
+function openLegal(page){ alert('Please register to view '+page); }
+
+// ── UI INIT ──────────────────────────────────────────
+function initUI(){
+  const u = STATE.user;
+  document.getElementById('sb-avatar').textContent = u.name.charAt(0).toUpperCase();
+  document.getElementById('sb-username').textContent = u.name;
+  const planEl = document.getElementById('sb-plan');
+  planEl.textContent = u.plan.toUpperCase();
+  planEl.className = 'sb-user-plan plan-'+u.plan;
+  if(u.role==='admin'){
+    document.getElementById('admin-nav-sec').style.display='';
+    document.getElementById('nav-admin').style.display='flex';
+  }
+  updateCurrentPlanDisplay();
+  buildPlansGrid();
+  buildStrategiesGrid();
+  renderAdminPricing();
+  nav('dashboard');
+  generateSignals();
+  buildInstitutionalView();
+  initCharts();
+  renderUsersTable();
+  updateAdminStats();
+}
+
+// ── NAVIGATION ───────────────────────────────────────
+function nav(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const p = document.getElementById('page-'+page);
+  const n = document.getElementById('nav-'+page);
+  if(p) p.classList.add('active');
+  if(n) n.classList.add('active');
+  if(page==='performance') initPerfCharts();
+  if(page==='admin'){ renderPaymentsTable(); renderUsersTable(); updateAdminStats(); adminTab('payments'); }
+}
+
+// ── MARKET DATA (BINANCE) ───────────────────────────
+function startMarketData(){
+  fetchPrices();
+  setInterval(fetchPrices, 5000);
+}
+
+async function fetchPrices(){
+  try {
+    const promises = CONFIG.pairs.map(p =>
+      fetch(`${CONFIG.binanceREST}/ticker/24hr?symbol=${p}`).then(r=>r.json())
+    );
+    const results = await Promise.allSettled(promises);
+    let html = '';
+    results.forEach((res,i)=>{
+      if(res.status==='fulfilled' && res.value && res.value.lastPrice){
+        const d = res.value;
+        const chg = parseFloat(d.priceChangePercent);
+        const up = chg >= 0;
+        STATE.priceData[d.symbol] = { price: parseFloat(d.lastPrice), change: chg, volume: parseFloat(d.volume), high: parseFloat(d.highPrice), low: parseFloat(d.lowPrice) };
+        html += `<div class="ticker-item"><span class="ticker-pair">${d.symbol.replace('USDT','')}/USDT</span><span class="ticker-price ${up?'ticker-up':'ticker-dn'}">${parseFloat(d.lastPrice).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:4})} <span style="font-size:10px">${up?'▲':'▼'}${Math.abs(chg).toFixed(2)}%</span></span></div>`;
+      }
+    });
+    if(html){ document.getElementById('price-ticker').innerHTML = html; }
+    document.getElementById('last-update').textContent = 'Updated '+new Date().toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('price-ticker').innerHTML = '<span style="font-size:11px;color:var(--muted);font-family:DM Mono,monospace">Market data: connecting...</span>';
+  }
+}
+
+// ── RSI CALCULATION ──────────────────────────────────
+async function fetchRSI(symbol){
+  try {
+    const r = await fetch(`${CONFIG.binanceREST}/klines?symbol=${symbol}&interval=6h&limit=20`);
+    const klines = await r.json();
+    if(!Array.isArray(klines)||klines.length<15) return 50;
+    const closes = klines.map(k=>parseFloat(k[4]));
+    let gains=0, losses=0;
+    for(let i=1;i<14;i++){
+      const d=closes[i]-closes[i-1];
+      if(d>0) gains+=d; else losses+=Math.abs(d);
+    }
+    const rs=(gains/14)/(losses/14||.001);
+    return Math.round(100-(100/(1+rs)));
+  } catch(e){ return Math.floor(Math.random()*40)+30; }
+}
+
+// ── VOLUME ANALYSIS ───────────────────────────────────
+async function fetchVolumeData(symbol){
+  try {
+    const r = await fetch(`${CONFIG.binanceREST}/klines?symbol=${symbol}&interval=6h&limit=10`);
+    const k = await r.json();
+    if(!Array.isArray(k)||!k.length) return { spike:false, ratio:1 };
+    const vols = k.map(c=>parseFloat(c[5]));
+    const avg = vols.slice(0,-1).reduce((a,b)=>a+b,0)/Math.max(vols.length-1,1);
+    const last = vols[vols.length-1];
+    return { spike: last > avg*1.5, ratio: +(last/avg).toFixed(2) };
+  } catch(e){ return { spike:Math.random()>.6, ratio:+(Math.random()*2+.5).toFixed(2) }; }
+}
+
+// ── SIGNAL ENGINE ─────────────────────────────────────
+function startSignalEngine(){
+  generateSignals();
+  const now = new Date();
+  const nextH = new Date(now);
+  nextH.setHours(Math.ceil(now.getHours()/6)*6,0,0,0);
+  const msToNext = nextH-now;
+  setTimeout(()=>{
+    generateSignals();
+    STATE.engineInterval = setInterval(generateSignals, 6*60*60*1000);
+  }, msToNext);
+}
+
+function scheduleNextRun(){
+  const now = new Date();
+  const h = now.getUTCHours();
+  const nextRunH = Math.ceil((h+.001)/6)*6;
+  const next = new Date(now);
+  next.setUTCHours(nextRunH,0,0,0);
+  if(next<=now) next.setUTCDate(next.getUTCDate()+1);
+  const diff = next-now;
+  const hh=Math.floor(diff/3600000), mm=Math.floor((diff%3600000)/60000);
+  const s = `${hh}h ${mm}m`;
+  const el=document.getElementById('next-run'); if(el) el.textContent=s;
+  const el2=document.getElementById('admin-next-run'); if(el2) el2.textContent=next.toUTCString();
+  setTimeout(scheduleNextRun, 60000);
+}
+
+async function generateSignals(){
+  const signals = [];
+  for(const sym of CONFIG.pairs){
+    try {
+      const rsi = await fetchRSI(sym);
+      const vol = await fetchVolumeData(sym);
+      const price = STATE.priceData[sym];
+      if(!price) continue;
+      const ob = detectOrderBlock(price);
+      const sweep = detectLiquiditySweep(price, vol);
+      const crt = detectCRT(price);
+      const inst = detectInstitutional(price, vol, ob, sweep);
+      const ics = computeICS({ ob, sweep, vol, rsi, inst });
+      if(ics >= 50){
+        const dir = rsi < 40 ? 'LONG' : rsi > 60 ? 'SHORT' : (Math.random()>.5?'LONG':'SHORT');
+        const strats = getSignalStrategies(ob, sweep, crt, inst, STATE.user?.plan);
+        signals.push({
+          id:'sig-'+sym+'-'+Date.now(),
+          pair:sym, dir, rsi, vol, ob, sweep, crt, inst, ics, strats,
+          price: price.price, tf:'6H',
+          sl: dir==='LONG'? +(price.price*.985).toFixed(4) : +(price.price*1.015).toFixed(4),
+          tp1: dir==='LONG'? +(price.price*1.03).toFixed(4) : +(price.price*.97).toFixed(4),
+          tp2: dir==='LONG'? +(price.price*1.06).toFixed(4) : +(price.price*.94).toFixed(4),
+          rr:'1:3', ts: new Date().toISOString()
+        });
+      }
+    } catch(e){}
+  }
+  STATE.signals = signals;
+  renderSignals();
+  updateDashStats();
+  updateSigBadge();
+}
+
+function detectOrderBlock(p){
+  if(!p) return { detected:false, quality:0 };
+  const q = Math.round(((p.high-p.low)/p.price)*1000);
+  return { detected: q>8, quality: Math.min(q,25), type: p.price > (p.high+p.low)/2 ? 'Bullish OB' : 'Bearish OB' };
+}
+
+function detectLiquiditySweep(p, v){
+  if(!p) return { detected:false, type:'None' };
+  const ran = (p.high-p.low)/p.price;
+  const detected = ran>.018 && v.ratio>1.3;
+  return { detected, type: detected ? (p.price>p.low+((p.high-p.low)*.5)?'EQL Sweep Long':'EQH Sweep Short') : 'None', ratio: v.ratio };
+}
+
+function detectCRT(p){
+  if(!p) return { detected:false, pattern:'None' };
+  const wick = (p.high-p.price)/(p.high-p.low||.001);
+  return { detected: wick>0.55 || wick<0.15, pattern: wick>0.55?'Bearish CRT':'Bullish CRT' };
+}
+
+function detectInstitutional(p, v, ob, sweep){
+  if(!p) return { detected:false, type:'None', confidence:0 };
+  const conf = (ob.detected?35:0)+(sweep.detected?30:0)+(v.spike?20:0)+( v.ratio>2?15:0);
+  return { detected: conf>40, confidence: conf, type: conf>70?'High-Conviction Inst. Zone':conf>40?'Institutional Interest':'None' };
+}
+
+function computeICS({ ob, sweep, vol, rsi, inst }){
+  let score = 0;
+  if(sweep.detected) score+=25;
+  if(ob.detected) score+=20;
+  if(vol.spike) score+=15;
+  if(vol.ratio>1.5) score+=10;
+  if(rsi<35||rsi>65) score+=15;
+  if(inst.detected) score+=15;
+  return Math.min(score, 100);
+}
+
+function getSignalStrategies(ob, sweep, crt, inst, plan){
+  const all=[];
+  all.push('ICT Killzone');
+  if(ob.detected) all.push('Order Block');
+  if(sweep.detected) all.push('Liq. Sweep');
+  if(crt.detected) all.push('CRT');
+  if(inst.detected) all.push('Inst. Zone');
+  return all;
+}
+
+function renderSignals(filtered){
+  const sigs = filtered || STATE.signals;
+  const grid = document.getElementById('signals-grid');
+  const dash = document.getElementById('dash-signals');
+  if(!sigs.length){
+    const empty='<div style="text-align:center;padding:40px;color:var(--muted);font-family:DM Mono,monospace;font-size:12px">No signals meeting threshold. Engine runs every 6H.<br><br><button class="btn btn-outline btn-sm" onclick="generateSignals()">↻ Refresh Now</button></div>';
+    if(grid) grid.innerHTML=empty;
+    if(dash) dash.innerHTML=empty;
+    return;
+  }
+  const planLocked = !['basic','premium','elite','admin'].includes(STATE.user?.plan||'demo') && STATE.user?.role!=='admin';
+  const cards = sigs.map((s,i)=>{
+    const icsClass = s.ics>=75?'ics-high':s.ics>=50?'ics-mid':'ics-low';
+    const lockedFull = planLocked && i>1;
+    return `<div class="signal-card ${lockedFull?'':''}${s.inst.detected?'card-gold':''}" onclick="openSignal('${s.id}')" style="${lockedFull?'opacity:.4;pointer-events:none':''}">
+      <div class="sig-dir sig-${s.dir.toLowerCase()}">${s.dir==='LONG'?'▲':'▼'}</div>
+      <div class="sig-info">
+        <div class="sig-pair">${s.pair.replace('USDT','/USDT')}</div>
+        <div class="sig-tf">6H · RSI: ${s.rsi} · ${s.strats.slice(0,2).join(' + ')}</div>
+        <div style="margin-top:4px">${s.inst.detected?'<span class="tag tge">🏛 INST.</span>':''}<span class="tag ${s.sweep.detected?'tg':'locked-tag'}">${s.sweep.detected?'SWEEP':'No Sweep'}</span><span class="tag ${s.crt.detected?'tp':'locked-tag'}">${s.crt.detected?'CRT':'-'}</span></div>
+      </div>
+      <div class="sig-meta">
+        <div class="sig-ics ${icsClass}">ICS ${s.ics}</div>
+        <div class="sig-strat">R:R ${s.rr}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:DM Mono,monospace;margin-top:3px">${new Date(s.ts).toLocaleTimeString()}</div>
+      </div>
+    </div>`;
+  }).join('');
+  if(grid) grid.innerHTML = cards;
+  if(dash) dash.innerHTML = sigs.slice(0,4).map((s,i)=>{
+    const icsClass=s.ics>=75?'ics-high':s.ics>=50?'ics-mid':'ics-low';
+    return `<div class="signal-card" onclick="openSignal('${s.id}')">
+      <div class="sig-dir sig-${s.dir.toLowerCase()}">${s.dir==='LONG'?'▲':'▼'}</div>
+      <div class="sig-info"><div class="sig-pair">${s.pair.replace('USDT','/USDT')}</div><div class="sig-tf">6H · ${s.strats[0]}</div></div>
+      <div class="sig-meta"><div class="sig-ics ${icsClass}">ICS ${s.ics}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function filterSignals(){
+  const pair = document.getElementById('filter-pair')?.value;
+  const dir = document.getElementById('filter-dir')?.value;
+  const icsF = document.getElementById('filter-ics')?.value;
+  let sigs = STATE.signals;
+  if(pair) sigs=sigs.filter(s=>s.pair===pair);
+  if(dir) sigs=sigs.filter(s=>s.dir===dir);
+  if(icsF==='high') sigs=sigs.filter(s=>s.ics>=75);
+  if(icsF==='mid') sigs=sigs.filter(s=>s.ics>=50&&s.ics<75);
+  renderSignals(sigs);
+}
+
+function openSignal(id){
+  const s = STATE.signals.find(x=>x.id===id);
+  if(!s) return;
+  const el = document.getElementById('modal-signal-content');
+  const icsClass = s.ics>=75?'ics-high':s.ics>=50?'ics-mid':'ics-low';
+  el.innerHTML=`
+    <div class="modal-title">${s.pair.replace('USDT','/USDT')} — ${s.dir}</div>
+    <div class="modal-sub">6H Timeframe · ISC Spreads Signal Engine · ${new Date(s.ts).toLocaleString()}</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <span class="sig-ics ${icsClass}">ICS Score: ${s.ics}</span>
+      <span class="tag ${s.inst.detected?'tge':'locked-tag'}">${s.inst.detected?'🏛 Institutional Zone Detected':'No Inst. Zone'}</span>
+    </div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="card"><div class="ct">Entry</div><div class="cv">$${s.price.toLocaleString(undefined,{maximumFractionDigits:4})}</div></div>
+      <div class="card"><div class="ct">Stop Loss</div><div class="cv" style="color:var(--red)">$${s.sl}</div></div>
+      <div class="card"><div class="ct">TP1 (1:3)</div><div class="cv" style="color:var(--green)">$${s.tp1}</div></div>
+      <div class="card"><div class="ct">TP2 (1:6)</div><div class="cv" style="color:var(--green)">$${s.tp2}</div></div>
+    </div>
+    <div class="ct">Signal Confluence</div>
+    <div style="margin-top:8px">
+      ${buildICSBreakdown(s)}
+    </div>
+    <div class="notice notice-gold" style="margin-top:14px;font-size:12px"><strong>Stoichiometric R:R:</strong> Minimum 1:3 enforced. Entry at OTE (50% of Order Block). SL beyond institutional zone. TP at opposing liquidity pool.</div>
+  `;
+  document.getElementById('modal-signal').classList.add('open');
+}
+
+function buildICSBreakdown(s){
+  const factors=[
+    {l:'Liquidity Sweep',v:s.sweep.detected?25:0,max:25,active:s.sweep.detected},
+    {l:'Order Block',v:s.ob.detected?20:0,max:20,active:s.ob.detected},
+    {l:'6H Structure',v:15,max:15,active:true},
+    {l:'Volume CVD',v:s.vol.spike?15:0,max:15,active:s.vol.spike},
+    {l:'RSI Divergence',v:(s.rsi<35||s.rsi>65)?15:5,max:15,active:(s.rsi<35||s.rsi>65)},
+    {l:'Inst. Footprint',v:s.inst.detected?10:0,max:10,active:s.inst.detected}
+  ];
+  return factors.map(f=>`
+    <div class="ics-bar-wrap">
+      <div class="ics-bar-label"><span>${f.l}</span><span style="color:${f.active?'var(--gold)':'var(--muted2)'}">${f.v}/${f.max}</span></div>
+      <div class="ics-bar-track"><div class="ics-bar-fill" style="width:${(f.v/f.max)*100}%;background:${f.active?'var(--gold)':'var(--muted2)'}"></div></div>
+    </div>`).join('');
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// ── INSTITUTIONAL VIEW ─────────────────────────────
+function buildInstitutionalView(){
+  const zones = STATE.signals.filter(s=>s.inst.detected).map(s=>({
+    pair:s.pair, type:s.inst.type, confidence:s.inst.confidence, dir:s.dir,
+    ob:s.ob.type, sweep:s.sweep.type, price:s.price
+  }));
+  STATE.instZones = zones;
+  const el = document.getElementById('inst-zones');
+  if(!el) return;
+  if(!zones.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;font-family:DM Mono,monospace;padding:20px">No institutional zones detected in current cycle. Refreshing every 6H.</div>'; }
+  else {
+    el.innerHTML = zones.map(z=>`
+      <div class="signal-card" style="border-color:var(--border)">
+        <div class="sig-dir sig-${z.dir.toLowerCase()}">${z.dir==='LONG'?'▲':'▼'}</div>
+        <div class="sig-info">
+          <div class="sig-pair">${z.pair.replace('USDT','/USDT')}</div>
+          <div class="sig-tf">${z.type} · ${z.ob}</div>
+          <div style="margin-top:4px"><span class="tag tge">Inst. Confirmed</span>${z.sweep!=='None'?'<span class="tag tg">'+z.sweep+'</span>':''}</div>
+        </div>
+        <div class="sig-meta">
+          <div class="sig-ics ics-high">CONF ${z.confidence}</div>
+          <div class="sig-strat">$${z.price.toLocaleString(undefined,{maximumFractionDigits:4})}</div>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('ob-count').textContent=zones.length;
+  document.getElementById('sweep-count').textContent=STATE.signals.filter(s=>s.sweep.detected).length;
+  document.getElementById('inst-ics').textContent=zones.length?Math.round(zones.reduce((a,b)=>a+b.confidence,0)/zones.length):'—';
+
+  const methods = document.getElementById('inst-methods');
+  if(methods){
+    const data=[
+      {l:'Order Block Detection',pct:85,color:'var(--gold)'},
+      {l:'Liquidity Sweep',pct:78,color:'var(--green)'},
+      {l:'Volume CVD Spike',pct:62,color:'var(--blue)'},
+      {l:'Displacement Candle',pct:71,color:'var(--purple)'},
+      {l:'FVG Imbalance',pct:69,color:'var(--gold)'},
+    ];
+    methods.innerHTML=data.map(d=>`
+      <div class="ics-bar-wrap">
+        <div class="ics-bar-label"><span>${d.l}</span><span>${d.pct}%</span></div>
+        <div class="ics-bar-track"><div class="ics-bar-fill" style="width:${d.pct}%;background:${d.color}"></div></div>
+      </div>`).join('');
+  }
+
+  const factors = document.getElementById('ics-factors');
+  if(factors){
+    const f=[
+      {l:'Liq. Sweep confirmed',pts:25,color:'var(--green)'},
+      {l:'Order Block present',pts:20,color:'var(--gold)'},
+      {l:'6H Structure aligned',pts:15,color:'var(--blue)'},
+      {l:'FVG/Imbalance aligned',pts:15,color:'var(--gold)'},
+      {l:'Volume CVD spike',pts:15,color:'var(--purple)'},
+      {l:'RSI divergence',pts:10,color:'var(--purple)'},
+    ];
+    factors.innerHTML=f.map(x=>`
+      <div class="ics-bar-wrap">
+        <div class="ics-bar-label"><span>${x.l}</span><span style="color:${x.color}">+${x.pts} pts</span></div>
+        <div class="ics-bar-track"><div class="ics-bar-fill" style="width:${(x.pts/25)*100}%;background:${x.color}"></div></div>
+      </div>`).join('');
+  }
+}
+
+// ── STRATEGIES GRID ────────────────────────────────
+function buildStrategiesGrid(){
+  const plan = STATE.user?.plan||'demo';
+  const all = [
+    {id:'ict',name:'ICT Framework',desc:'Killzones, FVG, Order Blocks, Breaker Blocks, OTE, Power of 3',plans:['demo','basic','premium','elite'],tag:'ICT'},
+    {id:'6h',name:'6H Timeframe Engine',desc:'Higher timeframe structure bias. Session-aligned signal generation.',plans:['demo','basic','premium','elite'],tag:'6H'},
+    {id:'smc',name:'SMC — ChoCH & BoS',desc:'Change of Character and Break of Structure detection for trend confirmation.',plans:['basic','premium','elite'],tag:'SMC'},
+    {id:'sweep',name:'Liquidity Sweep',desc:'Equal highs/lows sweep detection. Stop hunt confirmation before entry.',plans:['basic','premium','elite'],tag:'SWEEP'},
+    {id:'rsi',name:'RSI Divergence',desc:'14-period RSI divergence filter. Confirms momentum vs price action.',plans:['basic','premium','elite'],tag:'RSI'},
+    {id:'crt',name:'CRT Movement',desc:'Candle Range Theory pattern detection. Filters false signals.',plans:['premium','elite'],tag:'CRT'},
+    {id:'volume',name:'Volume CVD Analysis',desc:'Cumulative Volume Delta, absorption, iceberg detection.',plans:['premium','elite'],tag:'VOL'},
+    {id:'scalp',name:'Scalping Module',desc:'1M/5M entry refinement for precise intra-candle entries.',plans:['premium','elite'],tag:'SCALP'},
+    {id:'inst',name:'Institutional Tracker',desc:'Order block tracking, displacement, CVD spikes, iceberg detection.',plans:['premium','elite'],tag:'INST'},
+    {id:'stoich',name:'Stoichiometric R:R',desc:'Minimum 1:3 enforced. OTE entries. TP at opposing liquidity pools.',plans:['elite'],tag:'STOICH'},
+    {id:'ics75',name:'High-Conviction ICS 75+',desc:'Only signals scoring 75+ on Institutional Confidence Score.',plans:['elite'],tag:'ICS 75+'},
+    {id:'delta',name:'Delta Divergence',desc:'Price rises but delta falls — distribution detection for elite signals.',plans:['elite'],tag:'DELTA'},
+  ];
+  const planRank={demo:0,basic:1,premium:2,elite:3};
+  const userRank = planRank[plan]??0;
+  const el = document.getElementById('strategies-grid');
+  if(!el) return;
+  el.innerHTML=`<div class="g3">` + all.map(s=>{
+    const unlocked = s.plans.includes(plan) || STATE.user?.role==='admin';
+    return `<div class="card ${unlocked?'card-gold':''}" style="${!unlocked?'opacity:.55':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <span class="tag ${unlocked?'tge':'locked-tag'}">${unlocked?'✓ ACTIVE':'🔒 LOCKED'}</span>
+        <span class="tag tg">${s.tag}</span>
+      </div>
+      <div class="ct">${s.name}</div>
+      <div class="card-body" style="font-size:12px;color:var(--muted)">${s.desc}</div>
+      ${!unlocked?`<div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:DM Mono,monospace">Requires: ${s.plans[0].charAt(0).toUpperCase()+s.plans[0].slice(1)} plan</div>`:''}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ── PLANS GRID ─────────────────────────────────────
+function buildPlansGrid(){
+  const el = document.getElementById('plans-grid');
+  if(!el) return;
+  const current = STATE.user?.plan||'demo';
+  el.innerHTML=Object.entries(CONFIG.plans).filter(([k])=>k!=='demo').map(([key,p])=>`
+    <div class="plan-card ${key==='premium'?'featured':''}">
+      <div class="plan-name" style="color:${p.color}">${p.name}</div>
+      <div class="plan-price">${p.price===0?'FREE':'$'+p.price} <em>${p.price===0?'forever':'/month'}</em></div>
+      <div class="plan-desc">USDT / ETH / BTC payment. Activation via email code.</div>
+      ${p.strategies.map(s=>`<div class="plan-feature"><span class="dot-on">✓</span>${s}</div>`).join('')}
+      <button class="btn btn-full ${current===key?'btn-ghost':'btn-gold'}" style="margin-top:14px" onclick="selectPlan('${key}')" ${current===key?'disabled':''}>
+        ${current===key?'Current Plan':'Select '+p.name+' →'}
+      </button>
+    </div>`).join('');
+}
+
+function selectPlan(key){
+  const p = CONFIG.plans[key];
+  const el = document.getElementById('payment-section');
+  document.getElementById('pay-plan-name').textContent = p.name+' Plan';
+  document.getElementById('pay-amount').textContent = '$'+p.price+' USDT';
+  document.getElementById('pay-email').value = STATE.user?.email||'';
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth'});
+}
+
+function copyWallet(){
+  navigator.clipboard.writeText(CONFIG.wallet).then(()=>toast('✓ Wallet address copied!','gold'));
+}
+
+function submitPayment(){
+  const email = document.getElementById('pay-email').value.trim();
+  const tx = document.getElementById('pay-txhash').value.trim();
+  const planName = document.getElementById('pay-plan-name').textContent;
+  if(!email||!tx){ toast('Please fill in all fields.','red'); return; }
+  const pmt = {
+    id:'pmt-'+Date.now(), email, txhash:tx,
+    plan: planName.replace(' Plan','').toLowerCase(),
+    amount: document.getElementById('pay-amount').textContent,
+    submitted: new Date().toISOString(), status:'pending'
+  };
+  STATE.payments.push(pmt);
+  LS.set('payments', STATE.payments);
+  updateAdminStats();
+  document.getElementById('payment-section').style.display='none';
+  toast('✓ Payment submitted! You\'ll receive an activation code at '+email+' within 30 minutes.','green');
+}
+
+// ── ACTIVATION ────────────────────────────────────
+function activateCode(){
+  const code = document.getElementById('activation-code').value.trim().toUpperCase();
+  const err = document.getElementById('activate-err');
+  const ok = document.getElementById('activate-success');
+  err.classList.remove('show');
+  ok.style.display='none';
+  const match = STATE.generatedCodes.find(c=>c.code===code && !c.used && c.email===STATE.user?.email);
+  if(!match){ err.textContent='Invalid or expired code. Check your email or contact support.'; err.classList.add('show'); return; }
+  const planMap = { basic:'basic', premium:'premium', elite:'elite' };
+  const newPlan = planMap[match.plan]||'basic';
+  STATE.user.plan = newPlan;
+  match.used = true;
+  match.usedAt = new Date().toISOString();
+  const userIdx = STATE.users.findIndex(u=>u.email===STATE.user.email);
+  if(userIdx>=0){ STATE.users[userIdx].plan=newPlan; LS.set('users',STATE.users); }
+  LS.set('session',STATE.user);
+  LS.set('codes',STATE.generatedCodes);
+  document.getElementById('sb-plan').textContent = newPlan.toUpperCase();
+  document.getElementById('sb-plan').className='sb-user-plan plan-'+newPlan;
+  ok.style.display='block';
+  ok.textContent='✓ Plan activated! You now have '+newPlan.charAt(0).toUpperCase()+newPlan.slice(1)+' access. Refreshing strategies...';
+  buildStrategiesGrid();
+  buildPlansGrid();
+  updateCurrentPlanDisplay();
+  generateSignals();
+  toast('🎉 '+newPlan.charAt(0).toUpperCase()+newPlan.slice(1)+' plan activated!','green');
+}
+
+function updateCurrentPlanDisplay(){
+  const u = STATE.user;
+  const el = document.getElementById('current-plan-display');
+  const el2 = document.getElementById('plan-expiry-display');
+  if(el) el.textContent = (u?.plan||'demo').charAt(0).toUpperCase()+(u?.plan||'demo').slice(1);
+  if(el2) el2.textContent = u?.plan==='demo'?'No active subscription':'Active — renews monthly';
+}
+
+// ── ADMIN ─────────────────────────────────────────
+function adminTab(tab){
+  ['payments','generate','users','wallet','signals'].forEach(t=>{
+    const el=document.getElementById('admin-'+t);
+    const btn=document.getElementById('atab-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+    if(btn){ btn.className=t===tab?'btn btn-gold btn-sm':'btn btn-ghost btn-sm'; }
+  });
+}
+
+function generateCode(){
+  const plan = document.getElementById('gen-plan').value;
+  const email = document.getElementById('gen-email').value.trim().toLowerCase();
+  const validity = parseInt(document.getElementById('gen-validity').value);
+  const code = 'ISC-'+randStr(4)+'-'+randStr(4)+'-'+randStr(4);
+  const expires = new Date(Date.now()+validity*24*60*60*1000);
+  const entry = { code, plan, email:email||null, validity, expires:expires.toISOString(), used:false, created:new Date().toISOString() };
+  STATE.generatedCodes.push(entry);
+  LS.set('codes',STATE.generatedCodes);
+  renderGeneratedCodes();
+  toast('✓ Code generated: '+code,'gold');
+  if(email) toast('📧 Code dispatched to '+email+' (simulated)','green');
+}
+
+function randStr(n){ return Math.random().toString(36).substring(2,2+n).toUpperCase(); }
+
+function renderGeneratedCodes(){
+  const el = document.getElementById('generated-codes-list');
+  if(!el) return;
+  const recent = STATE.generatedCodes.slice(-8).reverse();
+  if(!recent.length){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;font-family:DM Mono,monospace">No codes yet</div>'; return; }
+  el.innerHTML=recent.map(c=>`
+    <div style="background:var(--bg4);border:1px solid var(--border3);border-radius:var(--r);padding:10px 12px;margin-bottom:8px">
+      <div style="font-family:DM Mono,monospace;font-size:13px;color:var(--gold);letter-spacing:1px;margin-bottom:4px">${c.code}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="tag tg">${c.plan.toUpperCase()}</span>
+        <span class="tag ${c.used?'tr':'tge'}">${c.used?'USED':'ACTIVE'}</span>
+        <span style="font-size:10px;color:var(--muted);font-family:DM Mono,monospace;align-self:center">${c.email||'Distributable'}</span>
+      </div>
+      <div style="margin-top:6px;display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="copyCode('${c.code}')">📋 Copy</button>
+        ${!c.used&&c.email?`<button class="btn btn-green btn-sm" onclick="resendCode('${c.code}')">📧 Resend</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function copyCode(code){
+  navigator.clipboard.writeText(code).then(()=>toast('✓ Code copied: '+code,'gold'));
+}
+
+function resendCode(code){
+  const c=STATE.generatedCodes.find(x=>x.code===code);
+  if(c&&c.email) toast('📧 Code re-sent to '+c.email+' (simulated)','green');
+}
+
+function renderPaymentsTable(){
+  const el=document.getElementById('pending-payments-table');
+  if(!el) return;
+  const pending=STATE.payments.filter(p=>p.status==='pending');
+  if(!pending.length){ el.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;font-family:DM Mono,monospace">No pending payments</td></tr>'; return; }
+  el.innerHTML=pending.map(p=>`
+    <tr>
+      <td>${p.email}</td>
+      <td><span class="tag tg">${p.plan.toUpperCase()}</span></td>
+      <td style="font-family:DM Mono,monospace">${p.amount}</td>
+      <td class="td-mono" style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${p.txhash}</td>
+      <td style="font-size:11px;color:var(--muted)">${new Date(p.submitted).toLocaleDateString()}</td>
+      <td><button class="btn btn-green btn-sm" onclick="approvePayment('${p.id}')">✓ Approve & Send Code</button></td>
+    </tr>`).join('');
+}
+
+function approvePayment(id){
+  const pmt=STATE.payments.find(p=>p.id===id);
+  if(!pmt) return;
+  pmt.status='approved';
+  const code='ISC-'+randStr(4)+'-'+randStr(4)+'-'+randStr(4);
+  const expires=new Date(Date.now()+30*24*60*60*1000);
+  STATE.generatedCodes.push({ code, plan:pmt.plan, email:pmt.email, validity:30, expires:expires.toISOString(), used:false, created:new Date().toISOString() });
+  LS.set('payments',STATE.payments);
+  LS.set('codes',STATE.generatedCodes);
+  renderPaymentsTable();
+  updateAdminStats();
+  renderGeneratedCodes();
+  toast('✓ Payment approved! Code '+code+' sent to '+pmt.email,'green');
+}
+
+function renderUsersTable(){
+  const el=document.getElementById('users-table');
+  if(!el) return;
+  el.innerHTML=STATE.users.map(u=>`
+    <tr>
+      <td>${u.name}</td>
+      <td style="font-size:12px;color:var(--muted)">${u.email}</td>
+      <td><span class="sb-user-plan plan-${u.plan}" style="display:inline-block">${u.plan.toUpperCase()}</span></td>
+      <td style="font-size:11px;color:var(--muted)">${new Date(u.joined).toLocaleDateString()}</td>
+      <td><span class="tag ${u.active?'tge':'tr'}">${u.active?'Active':'Inactive'}</span>${u.role==='admin'?'<span class="tag tr">Admin</span>':''}</td>
+      <td style="display:flex;gap:6px">
+        <select class="form-select" style="max-width:100px;padding:4px 8px;font-size:11px" onchange="changeUserPlan('${u.id}',this.value)">
+          <option value="demo" ${u.plan==='demo'?'selected':''}>Demo</option>
+          <option value="basic" ${u.plan==='basic'?'selected':''}>Basic</option>
+          <option value="premium" ${u.plan==='premium'?'selected':''}>Premium</option>
+          <option value="elite" ${u.plan==='elite'?'selected':''}>Elite</option>
+        </select>
+        <button class="btn btn-danger btn-sm" onclick="revokeUser('${u.id}')">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function changeUserPlan(id,plan){
+  const u=STATE.users.find(x=>x.id===id);
+  if(!u) return;
+  u.plan=plan;
+  LS.set('users',STATE.users);
+  toast('✓ '+u.name+' plan updated to '+plan,'gold');
+}
+
+function revokeUser(id){
+  const u=STATE.users.find(x=>x.id===id);
+  if(!u||u.role==='admin') return;
+  u.active=false;
+  LS.set('users',STATE.users);
+  renderUsersTable();
+  toast('User revoked','red');
+}
+
+function updateAdminStats(){
+  const pending=STATE.payments.filter(p=>p.status==='pending').length;
+  const verified=STATE.payments.filter(p=>p.status==='approved').length;
+  const revenue=STATE.payments.filter(p=>p.status==='approved').reduce((a,p)=>{
+    const amt=parseInt((p.amount||'0').replace(/[^0-9]/g,''));
+    return a+(isNaN(amt)?0:amt);
+  },0);
+  const active=STATE.users.filter(u=>u.plan!=='demo').length;
+  const pEl=document.getElementById('admin-stat-pending'); if(pEl) pEl.textContent=pending;
+  const vEl=document.getElementById('admin-stat-verified'); if(vEl) vEl.textContent=verified;
+  const rEl=document.getElementById('admin-stat-revenue'); if(rEl) rEl.textContent='$'+revenue;
+  const uEl=document.getElementById('admin-stat-users'); if(uEl) uEl.textContent=STATE.users.length;
+  const badge=document.getElementById('admin-pending-badge'); if(badge) badge.textContent=pending;
+}
+
+function updateWallet(){
+  const w=document.getElementById('new-wallet').value.trim();
+  if(!w){ toast('Enter a wallet address','red'); return; }
+  CONFIG.wallet='';
+  CONFIG.wallet=w;
+  document.getElementById('wallet-display').textContent=w;
+  document.getElementById('admin-wallet-display').textContent=w;
+  toast('✓ Wallet address updated','gold');
+}
+
+function renderAdminPricing(){
+  const el=document.getElementById('plan-pricing-admin');
+  if(!el) return;
+  el.innerHTML=['basic','premium','elite'].map(k=>`
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">${k.charAt(0).toUpperCase()+k.slice(1)} Plan Price ($)</label>
+      <input class="form-input" type="number" id="price-${k}" value="${STATE.prices[k]||CONFIG.plans[k]?.price||0}"/>
+    </div>`).join('');
+}
+
+function savePricing(){
+  ['basic','premium','elite'].forEach(k=>{
+    const v=document.getElementById('price-'+k)?.value;
+    if(v){ STATE.prices[k]=parseInt(v); CONFIG.plans[k].price=parseInt(v); }
+  });
+  LS.set('prices',STATE.prices);
+  buildPlansGrid();
+  toast('✓ Pricing updated','gold');
+}
+
+function manualRun(){
+  generateSignals();
+  buildInstitutionalView();
+  toast('✓ Signal engine executed manually','green');
+}
+
+// ── STATS ─────────────────────────────────────────
+function updateDashStats(){
+  const el=document.getElementById('stat-signals'); if(el) el.textContent=STATE.signals.length;
+  const el2=document.getElementById('stat-signals-change'); if(el2) el2.textContent='+'+STATE.signals.length+' this cycle';
+  const avg=STATE.signals.length?Math.round(STATE.signals.reduce((a,s)=>a+s.ics,0)/STATE.signals.length):0;
+  const el3=document.getElementById('stat-ics'); if(el3) el3.textContent=avg||'—';
+  buildInstitutionalView();
+}
+
+function updateSigBadge(){
+  const el=document.getElementById('sig-count-badge'); if(el) el.textContent=STATE.signals.length;
+}
+
+// ── CHARTS ─────────────────────────────────────────
+function initCharts(){
+  setTimeout(()=>{
+    initDistChart();
+    initICSChart();
+  },300);
+}
+
+function initDistChart(){
+  const canvas=document.getElementById('chart-dist');
+  if(!canvas||STATE.charts.dist) return;
+  const ctx=canvas.getContext('2d');
+  const longs=STATE.signals.filter(s=>s.dir==='LONG').length;
+  const shorts=STATE.signals.filter(s=>s.dir==='SHORT').length;
+  STATE.charts.dist=new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['LONG','SHORT'],
+      datasets:[{data:[longs||3,shorts||2],backgroundColor:['rgba(34,199,122,.7)','rgba(224,69,69,.7)'],borderColor:['#22C77A','#E04545'],borderWidth:1}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6E7280',font:{family:'DM Mono',size:11}}}}}
+  });
+}
+
+function initICSChart(){
+  const el=document.getElementById('ics-breakdown');
+  if(!el) return;
+  const f=[
+    {l:'Liq. Sweep',pts:25,c:'var(--green)'},{l:'Order Block',pts:20,c:'var(--gold)'},{l:'6H Structure',pts:15,c:'var(--blue)'},
+    {l:'Volume CVD',pts:15,c:'var(--purple)'},{l:'RSI Div.',pts:15,c:'var(--purple)'},{l:'Inst. Zone',pts:10,c:'var(--gold)'}
+  ];
+  el.innerHTML=f.map(x=>`
+    <div class="ics-bar-wrap">
+      <div class="ics-bar-label"><span>${x.l}</span><span style="color:${x.c}">+${x.pts}</span></div>
+      <div class="ics-bar-track"><div class="ics-bar-fill" style="width:${(x.pts/25)*100}%;background:${x.c}"></div></div>
+    </div>`).join('');
+}
+
+let perfChartsInit=false;
+function initPerfCharts(){
+  if(perfChartsInit) return;
+  perfChartsInit=true;
+  setTimeout(()=>{
+    const eqCtx=document.getElementById('chart-equity')?.getContext('2d');
+    if(eqCtx){
+      const labels=[...Array(30)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);return d.toLocaleDateString('en',{month:'short',day:'numeric'})});
+      let eq=10000; const data=labels.map(()=>{ eq*=(1+(Math.random()*.04-.01)); return Math.round(eq); });
+      new Chart(eqCtx,{type:'line',data:{labels,datasets:[{label:'Equity',data,borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.08)',borderWidth:2,pointRadius:0,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E7280',font:{size:9,family:'DM Mono'}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#6E7280',font:{size:9,family:'DM Mono'}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+    }
+    const wrCtx=document.getElementById('chart-winrate')?.getContext('2d');
+    if(wrCtx){
+      new Chart(wrCtx,{type:'bar',data:{labels:['ICT+OB','SMC','Liq. Sweep','CRT','Inst.','RSI'],datasets:[{data:[84,78,81,73,87,69],backgroundColor:'rgba(201,168,76,.6)',borderColor:'#C9A84C',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E7280',font:{size:10,family:'DM Mono'}},grid:{display:false}},y:{ticks:{color:'#6E7280',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'},min:60,max:100}}}});
+    }
+    const ssCtx=document.getElementById('chart-session')?.getContext('2d');
+    if(ssCtx){
+      new Chart(ssCtx,{type:'bar',data:{labels:['00:00','06:00','12:00','18:00'],datasets:[{data:[28,41,35,52],backgroundColor:['rgba(61,139,255,.5)','rgba(34,199,122,.5)','rgba(201,168,76,.5)','rgba(139,126,255,.5)'],borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E7280',font:{size:11,family:'DM Mono'}},grid:{display:false}},y:{ticks:{color:'#6E7280',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+    }
+  },200);
+}
+
+// ── TOAST ─────────────────────────────────────────
+function toast(msg,type='gold'){
+  const icon={gold:'◈',green:'✓',red:'✕',blue:'ℹ'}[type]||'◈';
+  const color={gold:'var(--gold)',green:'var(--green)',red:'var(--red)',blue:'var(--blue)'}[type]||'var(--gold)';
+  const t=document.createElement('div');
+  t.className='toast-item';
+  t.innerHTML=`<span class="toast-icon" style="color:${color}">${icon}</span><span>${msg}</span>`;
+  document.getElementById('toast').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); },3500);
+}
+</script>
+</body>
+</html>

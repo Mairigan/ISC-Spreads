@@ -1,0 +1,134 @@
+# ═══════════════════════════════════════════════════════════════
+# FILE: Dockerfile
+# ═══════════════════════════════════════════════════════════════
+# --- Dockerfile ---
+# FROM python:3.11-slim
+# WORKDIR /app
+# COPY requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
+# COPY . .
+# EXPOSE 8000
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+
+
+# ═══════════════════════════════════════════════════════════════
+# FILE: docker-compose.yml
+# ═══════════════════════════════════════════════════════════════
+# version: "3.9"
+# services:
+#
+#   api:
+#     build: .
+#     ports: ["8000:8000"]
+#     env_file: .env
+#     depends_on: [db]
+#     restart: unless-stopped
+#     networks: [isc]
+#
+#   db:
+#     image: postgres:16
+#     environment:
+#       POSTGRES_DB: iscspreads
+#       POSTGRES_USER: isc
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+#     ports: ["5432:5432"]
+#     restart: unless-stopped
+#     networks: [isc]
+#     command: >
+#       postgres
+#       -c shared_preload_libraries=pg_cron
+#       -c cron.database_name=iscspreads
+#       -c timezone=Africa/Lagos
+#
+#   nginx:
+#     image: nginx:alpine
+#     ports: ["80:80", "443:443"]
+#     volumes:
+#       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+#       - ./index.html:/usr/share/nginx/html/index.html
+#       - ./certs:/etc/nginx/certs
+#     depends_on: [api]
+#     networks: [isc]
+#
+# volumes:
+#   pgdata:
+# networks:
+#   isc:
+
+
+# ═══════════════════════════════════════════════════════════════
+# FILE: nginx.conf
+# ═══════════════════════════════════════════════════════════════
+# server {
+#     listen 80;
+#     server_name iscspreads.io www.iscspreads.io;
+#     return 301 https://$host$request_uri;
+# }
+#
+# server {
+#     listen 443 ssl;
+#     server_name iscspreads.io www.iscspreads.io;
+#
+#     ssl_certificate /etc/nginx/certs/fullchain.pem;
+#     ssl_certificate_key /etc/nginx/certs/privkey.pem;
+#
+#     # Serve frontend
+#     root /usr/share/nginx/html;
+#     index index.html;
+#     location / {
+#         try_files $uri $uri/ /index.html;
+#     }
+#
+#     # Proxy API
+#     location /api/ {
+#         proxy_pass http://api:8000/;
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         add_header 'Access-Control-Allow-Origin' '*';
+#     }
+#
+#     # Security headers
+#     add_header X-Frame-Options "SAMEORIGIN";
+#     add_header X-Content-Type-Options "nosniff";
+#     add_header Referrer-Policy "strict-origin-when-cross-origin";
+# }
+
+
+# ═══════════════════════════════════════════════════════════════
+# FILE: .env.example  (rename to .env and fill in values)
+# ═══════════════════════════════════════════════════════════════
+DATABASE_URL=postgresql://isc:yourpassword@db:5432/iscspreads
+SECRET_KEY=change-this-to-a-random-64-char-string-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxx
+FROM_EMAIL=noreply@iscspreads.io
+ADMIN_EMAIL=samuelmaigari0@gmail.com
+WALLET_ADDRESS=0x3fec94ae357d5f4921f04a7a7e335dd21df74330
+
+BINANCE_BASE=https://api.binance.com/api/v3
+TIMEZONE=Africa/Lagos
+
+POSTGRES_PASSWORD=yourpassword
+
+
+# ═══════════════════════════════════════════════════════════════
+# FILE: requirements.txt
+# ═══════════════════════════════════════════════════════════════
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+asyncpg==0.29.0
+httpx==0.27.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.1
+resend==0.7.0
+apscheduler==3.10.4
+numpy==1.26.4
+pydantic==2.7.0
+pydantic-settings==2.2.1
