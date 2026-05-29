@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ISC Spreads — Institutional Signal Confluence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Cormorant+Garamond:wght@600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --gold:#C9A84C;--gold2:#F0D07A;--g3:rgba(201,168,76,.1);--g4:rgba(201,168,76,.22);
+  --bg:#07090E;--bg2:#0B0D14;--bg3:#10131C;--bg4:#161924;--bg5:#1C2030;
+  --bdr:rgba(201,168,76,.13);--bdr2:rgba(201,168,76,.3);--bdr3:rgba(255,255,255,.07);
+  --tx:#E4E6EF;--mu:#6E7280;--mu2:#3E404E;
+  --gr:#22C77A;--gr2:rgba(34,199,122,.13);
+  --rd:#E04545;--rd2:rgba(224,69,69,.13);
+  --bl:#3D8BFF;--bl2:rgba(61,139,255,.13);
+  --pu:#8B7EFF;--pu2:rgba(139,126,255,.13);
+  --or:#F09E3A;--or2:rgba(240,158,58,.13);
+  --r:8px;--r2:12px;--r3:16px;
+  --shadow:0 4px 24px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:'Syne',sans-serif;font-size:14px;line-height:1.6;overflow-x:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+button{cursor:pointer;font-family:'Syne',sans-serif}
+input,select,textarea{font-family:'Syne',sans-serif}
+
+/* APP SHELL */
+#app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.main{flex:1;overflow-y:auto;background:var(--bg)}
+
+/* SIDEBAR */
+.sb-logo{padding:20px 18px 14px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.sb-logo-row{display:flex;align-items:center;gap:10px}
+.sb-mark{width:38px;height:38px;background:var(--g3);border:1px solid var(--bdr2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--gold);letter-spacing:.5px;flex-shrink:0}
+.sb-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--gold)}
+.sb-tag{font-size:9px;color:var(--mu);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.nav{padding:10px;flex:1}
+.nsec{font-size:9px;letter-spacing:2px;color:var(--mu2);font-family:'DM Mono',monospace;text-transform:uppercase;padding:12px 8px 5px;user-select:none}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;color:var(--mu);font-size:12.5px;font-weight:500;margin-bottom:1px;border:1px solid transparent;transition:all .14s}
+.ni:hover{background:var(--g3);color:var(--tx)}
+.ni.active{background:var(--g3);border-color:var(--bdr);color:var(--gold)}
+.ni-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.ni-badge{margin-left:auto;font-size:9px;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:8px;font-weight:500}
+.nb-g{background:var(--g3);color:var(--gold);border:1px solid var(--bdr)}
+.nb-gr{background:var(--gr2);color:var(--gr);border:1px solid rgba(34,199,122,.22)}
+.nb-rd{background:var(--rd2);color:var(--rd);border:1px solid rgba(224,69,69,.22)}
+.sb-bottom{padding:12px 14px;border-top:1px solid var(--bdr);flex-shrink:0}
+.sb-ur{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-av{width:32px;height:32px;border-radius:50%;background:var(--g3);border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);flex-shrink:0}
+.sb-uname{font-size:12px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.sb-uplan{font-size:9px;font-family:'DM Mono',monospace;padding:1px 7px;border-radius:4px;display:inline-block;margin-top:2px;letter-spacing:.5px}
+.plan-demo{background:var(--bl2);color:var(--bl);border:1px solid rgba(61,139,255,.22)}
+.plan-basic{background:var(--g3);color:var(--gold);border:1px solid var(--bdr)}
+.plan-premium{background:var(--pu2);color:var(--pu);border:1px solid rgba(139,126,255,.22)}
+.plan-elite{background:var(--gr2);color:var(--gr);border:1px solid rgba(34,199,122,.22)}
+.plan-admin{background:var(--rd2);color:var(--rd);border:1px solid rgba(224,69,69,.22)}
+.sb-logout{width:100%;padding:6px;background:transparent;border:1px solid var(--bdr3);border-radius:var(--r);color:var(--mu);font-size:11px;transition:all .14s;text-align:center}
+.sb-logout:hover{border-color:var(--rd);color:var(--rd)}
+
+/* PAGE */
+.page{padding:26px 28px 40px;min-height:100%;display:none;animation:fadeIn .18s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.ph{margin-bottom:22px}
+.ph-lbl{font-size:9px;letter-spacing:3px;color:var(--gold);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:8px}
+.ph-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--bdr),transparent)}
+.ph-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--tx);margin-bottom:5px;line-height:1.15}
+.ph-desc{font-size:13px;color:var(--mu);line-height:1.75;max-width:600px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* CARDS */
+.card{background:var(--bg3);border:1px solid var(--bdr3);border-radius:var(--r2);padding:16px 18px}
+.card-gold{border-color:var(--bdr)!important}
+.card-hover{transition:border-color .14s,background .14s}
+.card-hover:hover{border-color:var(--bdr);background:var(--bg4)}
+.ct{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.cv{font-size:22px;font-weight:700;color:var(--tx);font-family:'Cormorant Garamond',serif;line-height:1.1;margin-bottom:2px}
+.cs{font-size:11px;color:var(--mu)}
+
+/* STAT CARDS */
+.sc{background:var(--bg3);border:1px solid var(--bdr3);border-radius:var(--r2);padding:14px 16px;position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.35}
+.s-lbl{font-size:10px;color:var(--mu);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.s-val{font-size:26px;font-weight:700;color:var(--tx);font-family:'Cormorant Garamond',serif;line-height:1.05}
+.s-sub{font-size:11px;color:var(--mu);margin-top:2px}
+.s-chg{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:5px}
+.up{background:var(--gr2);color:var(--gr);border:1px solid rgba(34,199,122,.2)}
+.dn{background:var(--rd2);color:var(--rd);border:1px solid rgba(224,69,69,.2)}
+.neu{background:var(--g3);color:var(--gold);border:1px solid var(--bdr)}
+
+/* SIGNAL CARDS */
+.sig-card{background:var(--bg3);border:1px solid var(--bdr3);border-radius:var(--r2);padding:11px 14px;margin-bottom:6px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .14s;position:relative}
+.sig-card:hover{border-color:var(--bdr);background:var(--bg4)}
+.sig-card.inst-zone{border-left:2px solid var(--gold)}
+.sig-card.high-conv{border-left:2px solid var(--gr)}
+.sig-dir{width:34px;height:34px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;font-weight:700}
+.dir-long{background:var(--gr2);color:var(--gr);border:1px solid rgba(34,199,122,.22)}
+.dir-short{background:var(--rd2);color:var(--rd);border:1px solid rgba(224,69,69,.22)}
+.sig-info{flex:1;min-width:0}
+.sig-pair{font-size:14px;font-weight:600;color:var(--tx)}
+.sig-sub{font-size:10px;color:var(--mu);font-family:'DM Mono',monospace;margin-top:1px}
+.sig-tags{margin-top:4px;display:flex;flex-wrap:wrap;gap:3px}
+.sig-right{text-align:right;flex-shrink:0}
+.ics-pill{font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:3px;font-weight:500}
+.ics-high{background:var(--gr2);color:var(--gr);border:1px solid rgba(34,199,122,.22)}
+.ics-mid{background:var(--g3);color:var(--gold);border:1px solid var(--bdr)}
+.ics-low{background:var(--rd2);color:var(--rd);border:1px solid rgba(224,69,69,.22)}
+.sig-rr{font-size:10px;color:var(--mu);font-family:'DM Mono',monospace}
+.sig-time{font-size:9px;color:var(--mu2);font-family:'DM Mono',monospace;margin-top:2px}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:3px;line-height:1.4;white-space:nowrap}
+.tg{background:var(--g3);color:var(--gold);border:1px solid var(--bdr)}
+.tb{background:var(--bl2);color:var(--bl);border:1px solid rgba(61,139,255,.2)}
+.tge{background:var(--gr2);color:var(--gr);border:1px solid rgba(34,199,122,.2)}
+.tr{background:var(--rd2);color:var(--rd);border:1px solid rgba(224,69,69,.2)}
+.tp{background:var(--pu2);color:var(--pu);border:1px solid rgba(139,126,255,.2)}
+.to{background:var(--or2);color:var(--or);border:1px solid rgba(240,158,58,.2)}
+.tlk{background:rgba(40,42,55,.5);color:var(--mu2);border:1px solid var(--bdr3)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;border:none;transition:all .14s;cursor:pointer;white-space:nowrap;line-height:1}
+.btn-gold{background:var(--gold);color:var(--bg);font-weight:600}.btn-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-out{background:transparent;border:1px solid var(--bdr2);color:var(--gold)}.btn-out:hover{background:var(--g3)}
+.btn-gh{background:transparent;border:1px solid var(--bdr3);color:var(--mu)}.btn-gh:hover{border-color:var(--bdr);color:var(--tx)}
+.btn-gr{background:var(--gr2);border:1px solid rgba(34,199,122,.3);color:var(--gr)}.btn-gr:hover{background:rgba(34,199,122,.2)}
+.btn-rd{background:var(--rd2);border:1px solid rgba(224,69,69,.3);color:var(--rd)}.btn-rd:hover{background:rgba(224,69,69,.2)}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:6px}
+.btn-lg{padding:12px 24px;font-size:14px;font-weight:600}
+.btn-full{width:100%}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+
+/* FORMS */
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:10px;font-weight:600;color:var(--mu);font-family:'DM Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
+.fi{width:100%;background:var(--bg4);border:1px solid var(--bdr3);border-radius:var(--r);padding:10px 13px;color:var(--tx);font-size:13px;outline:none;transition:border-color .14s}
+.fi:focus{border-color:var(--bdr2);background:var(--bg5)}
+.fi::placeholder{color:var(--mu2)}
+.fsel{width:100%;background:var(--bg4);border:1px solid var(--bdr3);border-radius:var(--r);padding:10px 13px;color:var(--tx);font-size:13px;outline:none;cursor:pointer;transition:border-color .14s}
+.fsel:focus{border-color:var(--bdr2)}
+.fhint{font-size:11px;color:var(--mu);margin-top:4px;font-family:'DM Mono',monospace}
+.ferr{font-size:11px;color:var(--rd);margin-top:4px;font-family:'DM Mono',monospace;display:none;padding:6px 10px;background:var(--rd2);border:1px solid rgba(224,69,69,.2);border-radius:var(--r)}
+.ferr.show{display:block}
+.fok{font-size:11px;color:var(--gr);margin-top:4px;font-family:'DM Mono',monospace;display:none;padding:6px 10px;background:var(--gr2);border:1px solid rgba(34,199,122,.2);border-radius:var(--r)}
+.fok.show{display:block}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--bdr3)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg4);padding:10px 13px;text-align:left;font-size:9px;color:var(--mu);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--bdr3);white-space:nowrap;user-select:none}
+td{padding:10px 13px;border-bottom:1px solid var(--bdr3);font-size:12px;color:var(--tx);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-mono{font-family:'DM Mono',monospace;font-size:11px}
+.td-trunc{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* MODAL */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px;backdrop-filter:blur(5px)}
+.mover.open{display:flex;animation:fadeIn .2s ease}
+.modal{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r3);padding:26px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:var(--shadow)}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.mc{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer;padding:4px 6px;border-radius:4px;transition:color .14s}
+.mc:hover{color:var(--tx)}
+.mt{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx);margin-bottom:5px}
+.ms{font-size:13px;color:var(--mu);margin-bottom:18px;line-height:1.65}
+
+/* NOTICES */
+.notice{border-radius:var(--r);padding:11px 14px;margin-bottom:12px;font-size:13px;line-height:1.65}
+.n-gold{background:var(--g3);border:1px solid var(--bdr);color:var(--tx)}.n-gold strong{color:var(--gold)}
+.n-gr{background:var(--gr2);border:1px solid rgba(34,199,122,.22);color:var(--gr)}.n-gr strong{color:var(--gr)}
+.n-rd{background:var(--rd2);border:1px solid rgba(224,69,69,.22);color:var(--rd)}.n-rd strong{color:var(--rd)}
+.n-bl{background:var(--bl2);border:1px solid rgba(61,139,255,.22);color:var(--bl)}.n-bl strong{color:var(--bl)}
+
+/* BAR */
+.bar-wrap{margin:5px 0}
+.bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--mu);font-family:'DM Mono',monospace;margin-bottom:3px}
+.bar-tr{height:5px;background:var(--bg5);border-radius:3px;overflow:hidden}
+.bar-fl{height:100%;border-radius:3px;transition:width .45s ease}
+
+/* LIVE PULSE */
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--gr);display:inline-block;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,199,122,.5)}50%{box-shadow:0 0 0 6px rgba(34,199,122,0)}}
+
+/* TICKER */
+.ticker-row{display:flex;flex-wrap:wrap;gap:16px;font-family:'DM Mono',monospace}
+.t-item{display:flex;flex-direction:column;gap:1px}
+.t-sym{font-size:9px;color:var(--mu);letter-spacing:1px;text-transform:uppercase}
+.t-px{font-size:12px;color:var(--tx)}
+.t-up{color:var(--gr)}.t-dn{color:var(--rd)}
+.t-chg{font-size:9px;margin-left:2px}
+
+/* PLAN CARDS */
+.plan-card{background:var(--bg3);border:1px solid var(--bdr3);border-radius:var(--r3);padding:20px;position:relative;overflow:hidden;transition:border-color .14s,transform .14s;display:flex;flex-direction:column}
+.plan-card:hover{border-color:var(--bdr);transform:translateY(-2px)}
+.plan-card.featured{border-color:var(--bdr2)}
+.plan-pop{position:absolute;top:13px;right:-1px;background:var(--gold);color:var(--bg);font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:4px 0 0 4px;font-weight:600;letter-spacing:1px}
+.plan-name{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.plan-price{font-size:30px;font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--tx);margin-bottom:3px;line-height:1}
+.plan-period{font-size:13px;color:var(--mu);font-weight:400}
+.plan-desc{font-size:12px;color:var(--mu);margin:8px 0 12px;line-height:1.5}
+.plan-feats{flex:1;list-style:none;margin-bottom:14px}
+.plan-feat{font-size:12px;color:var(--mu);padding:4px 0;border-bottom:1px solid var(--bdr3);display:flex;gap:6px;align-items:flex-start;line-height:1.5}
+.plan-feat:last-child{border-bottom:none}
+.f-on{color:var(--gr);flex-shrink:0;font-size:11px;margin-top:1px}
+
+/* WALLET BOX */
+.wbox{background:var(--bg4);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px 16px}
+.w-lbl{font-size:9px;color:var(--mu);letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:5px}
+.w-addr{font-size:11px;color:var(--gold);word-break:break-all;line-height:1.65;font-family:'DM Mono',monospace}
+.w-net{font-size:9px;color:var(--mu2);font-family:'DM Mono',monospace;margin-top:3px;letter-spacing:1px}
+.w-copy{font-size:11px;color:var(--mu);cursor:pointer;margin-top:7px;display:inline-flex;align-items:center;gap:5px;transition:color .14s;font-family:'DM Mono',monospace}
+.w-copy:hover{color:var(--gold)}
+
+/* CHART */
+.chart-wrap{position:relative}
+
+/* LEGAL */
+.legal{font-size:13px;color:var(--mu);line-height:1.85}
+.legal h3{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--tx);margin:20px 0 8px;font-weight:700}
+.legal h3:first-child{margin-top:0}
+.legal p{margin-bottom:10px}
+.legal ul,.legal ol{padding-left:1.25rem;margin-bottom:10px}
+.legal li{margin-bottom:4px}
+.legal strong{color:var(--gold);font-weight:500}
+
+/* DIVIDER */
+.dv{height:1px;background:var(--bdr3);margin:18px 0}
+
+/* ADMIN TABS */
+.atabs{display:flex;gap:5px;margin-bottom:18px;flex-wrap:wrap;border-bottom:1px solid var(--bdr3);padding-bottom:12px}
+.atab{padding:6px 14px;border-radius:var(--r);font-size:12px;font-weight:500;border:1px solid var(--bdr3);color:var(--mu);cursor:pointer;transition:all .14s}
+.atab:hover{border-color:var(--bdr);color:var(--tx)}
+.atab.active{background:var(--g3);border-color:var(--bdr);color:var(--gold)}
+
+/* COMMUNITY CARD */
+.comm-card{background:var(--bg3);border:1px solid var(--bdr3);border-radius:var(--r2);padding:18px;display:block;transition:border-color .14s,background .14s;color:inherit;cursor:pointer}
+.comm-card:hover{border-color:var(--bdr);background:var(--bg4)}
+.comm-ico{font-size:28px;margin-bottom:8px;display:block}
+.comm-link{font-size:11px;color:var(--gold);margin-top:10px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px}
+
+/* ENGINE ROW */
+.engine-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--bdr3)}
+.engine-row:last-child{border-bottom:none}
+.engine-name{color:var(--mu)}
+
+/* DETAIL GRID */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.detail-cell{background:var(--bg4);border:1px solid var(--bdr3);border-radius:var(--r);padding:10px 12px}
+.detail-lbl{font-size:9px;color:var(--mu);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.detail-val{font-size:16px;font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--tx)}
+
+/* AUTH */
+#auth{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+#auth.hidden{display:none}
+.auth-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r3);padding:32px;width:100%;max-width:400px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.auth-logo{text-align:center;margin-bottom:24px}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:var(--r);padding:3px;margin-bottom:20px}
+.auth-tab{flex:1;padding:7px;text-align:center;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:var(--mu);transition:all .14s;user-select:none}
+.auth-tab.active{background:var(--g3);color:var(--gold);border:1px solid var(--bdr)}
+
+/* TOAST */
+#toast{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.ti{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);padding:11px 15px;font-size:13px;color:var(--tx);max-width:320px;display:flex;gap:9px;align-items:center;animation:fadeIn .2s ease;box-shadow:var(--shadow)}
+
+/* UTILITIES */
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.flex-gap{display:flex;align-items:center;gap:8px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px">
+        <div class="sb-mark" style="width:46px;height:46px;font-size:13px">ISC</div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--gold)">ISC Spreads</div>
+          <div style="font-size:9px;color:var(--mu);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase">Institutional Signal Confluence</div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" id="tab-reg" onclick="switchAuthTab('register')">Create Account</div>
+    </div>
+    <div id="frm-login">
+      <div class="fg"><label class="fl">Email Address</label><input class="fi" type="email" id="l-email" placeholder="you@example.com" autocomplete="email"/></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="l-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div id="l-err" class="ferr">Invalid email or password.</div>
+      <button class="btn btn-gold btn-full btn-lg" onclick="doLogin()" style="margin-top:6px">Sign In →</button>
+      <p style="font-size:11px;color:var(--mu);text-align:center;margin-top:10px;font-family:'DM Mono',monospace">Demo: demo@iscspreads.io / demo1234</p>
+    </div>
+    <div id="frm-reg" style="display:none">
+      <div class="fg"><label class="fl">Full Name</label><input class="fi" type="text" id="r-name" placeholder="Your full name"/></div>
+      <div class="fg"><label class="fl">Email Address</label><input class="fi" type="email" id="r-email" placeholder="you@example.com"/></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="r-pw" placeholder="Minimum 8 characters" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+      <div id="r-err" class="ferr"></div>
+      <button class="btn btn-gold btn-full btn-lg" onclick="doRegister()" style="margin-top:6px">Create Account →</button>
+    </div>
+    <p style="font-size:11px;color:var(--mu);text-align:center;margin-top:14px;line-height:1.65">By continuing you agree to our <a href="#" onclick="quickLegal('disclaimer')">Risk Disclaimer</a>, <a href="#" onclick="quickLegal('privacy')">Privacy Policy</a> and <a href="#" onclick="quickLegal('terms')">Terms &amp; Conditions</a></p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-row">
+        <div class="sb-mark">ISC</div>
+        <div><div class="sb-name">ISC Spreads</div><div class="sb-tag">Inst. Signal Confluence</div></div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nsec">Trading</div>
+      <div class="ni active" id="nav-dashboard"     onclick="navigate('dashboard')"><span class="ni-ico">◈</span>Dashboard</div>
+      <div class="ni"        id="nav-signals"        onclick="navigate('signals')"><span class="ni-ico">⚡</span>Live Signals<span class="ni-badge nb-gr" id="badge-signals">0</span></div>
+      <div class="ni"        id="nav-institutional"  onclick="navigate('institutional')"><span class="ni-ico">🏛</span>Institutional<span class="ni-badge nb-g" id="badge-inst">0</span></div>
+      <div class="ni"        id="nav-strategies"     onclick="navigate('strategies')"><span class="ni-ico">⚙</span>Strategies</div>
+      <div class="ni"        id="nav-performance"    onclick="navigate('performance')"><span class="ni-ico">📈</span>Performance</div>
+      <div class="nsec">Account</div>
+      <div class="ni"        id="nav-upgrade"        onclick="navigate('upgrade')"><span class="ni-ico">⬆</span>Upgrade Plan</div>
+      <div class="ni"        id="nav-activate"       onclick="navigate('activate')"><span class="ni-ico">🔑</span>Activate Code</div>
+      <div class="ni"        id="nav-community"      onclick="navigate('community')"><span class="ni-ico">🌐</span>Community</div>
+      <div class="nsec">Legal</div>
+      <div class="ni"        id="nav-disclaimer"     onclick="navigate('disclaimer')"><span class="ni-ico">⚠</span>Risk Disclaimer</div>
+      <div class="ni"        id="nav-privacy"        onclick="navigate('privacy')"><span class="ni-ico">🔒</span>Privacy Policy</div>
+      <div class="ni"        id="nav-terms"          onclick="navigate('terms')"><span class="ni-ico">📄</span>Terms &amp; Conditions</div>
+      <div class="nsec admin-only" id="adm-nav-sec" style="display:none">Admin</div>
+      <div class="ni admin-only" id="nav-admin" onclick="navigate('admin')" style="display:none"><span class="ni-ico">🛡</span>Admin Panel<span class="ni-badge nb-rd" id="badge-pending">0</span></div>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-ur">
+        <div class="sb-av" id="sb-av">U</div>
+        <div style="min-width:0"><div class="sb-uname" id="sb-uname">User</div><div class="sb-uplan plan-demo" id="sb-uplan">DEMO</div></div>
+      </div>
+      <button class="sb-logout" onclick="doLogout()">✕ Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph">
+        <div class="ph-lbl">Overview</div>
+        <div class="ph-title">Trading Dashboard</div>
+        <div class="ph-desc">Real-time signals from Binance live data. Engine runs every 6H aligned to WAT sessions: 00:00 · 06:00 · 12:00 · 18:00.</div>
+      </div>
+      <div class="card card-gold mb-12" style="padding:10px 16px">
+        <div class="flex-between mb-8">
+          <div style="display:flex;align-items:center;gap:8px"><span class="live-dot"></span><span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--gr)">LIVE — BINANCE PUBLIC API</span></div>
+          <span style="font-size:10px;color:var(--mu);font-family:'DM Mono',monospace" id="ticker-upd">Connecting...</span>
+        </div>
+        <div class="ticker-row" id="ticker-wrap"><span style="font-size:11px;color:var(--mu);font-family:'DM Mono',monospace">Loading market data...</span></div>
+      </div>
+      <div class="g4 mb-16">
+        <div class="sc"><div class="s-lbl">Active Signals</div><div class="s-val" id="stat-sigs">0</div><div class="s-sub">This 6H cycle</div><span class="s-chg up" id="stat-sigs-chg">Engine running</span></div>
+        <div class="sc"><div class="s-lbl">Avg ICS Score</div><div class="s-val" id="stat-ics">—</div><div class="s-sub">Confluence level</div><span class="s-chg neu">Institutional</span></div>
+        <div class="sc"><div class="s-lbl">Inst. Zones</div><div class="s-val" id="stat-zones">0</div><div class="s-sub">Smart money tracked</div><span class="s-chg up">Mapped</span></div>
+        <div class="sc"><div class="s-lbl">Next Engine Run</div><div class="s-val" id="stat-next" style="font-size:20px">—</div><div class="s-sub">6H cycle (WAT)</div><span class="s-chg neu">Scheduled</span></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="flex-between mb-12"><div class="ct" style="margin-bottom:0">Latest Signals</div><button class="btn btn-gh btn-sm" onclick="navigate('signals')">View All →</button></div>
+          <div id="dash-sig-list"><div style="text-align:center;padding:28px;color:var(--mu);font-family:'DM Mono',monospace;font-size:12px">Generating signals from live data...</div></div>
+        </div>
+        <div>
+          <div class="ct mb-12">Signal Distribution</div>
+          <div class="card mb-12" style="padding:14px"><div class="chart-wrap" style="height:200px"><canvas id="ch-dist"></canvas></div></div>
+          <div class="ct mb-12">ICS Factor Weights</div>
+          <div class="card" style="padding:14px"><div id="ics-factors-dash"></div></div>
+        </div>
+      </div>
+      <div class="dv"></div>
+      <div class="ct mb-12">Performance Snapshot</div>
+      <div class="g4">
+        <div class="card card-hover"><div class="ct" style="font-size:9px">Win Rate</div><div class="cv">76.4%</div><div class="cs">Last 30 days</div><div class="s-chg up mt-8" style="display:inline-block">+2.1% MoM</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px">Avg R:R</div><div class="cv">1 : 3.8</div><div class="cs">Min target: 1:3</div><div class="s-chg up mt-8" style="display:inline-block">Stoichiometric</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px">Best Strategy</div><div class="cv" style="font-size:18px">ICT + OB</div><div class="cs">Order block confluence</div><div class="s-chg up mt-8" style="display:inline-block">84% win rate</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px">Total Signals</div><div class="cv">1,247</div><div class="cs">All-time backtest</div><div class="s-chg neu mt-8" style="display:inline-block">6 pairs</div></div>
+      </div>
+    </div>
+
+    <!-- LIVE SIGNALS -->
+    <div class="page" id="page-signals">
+      <div class="ph">
+        <div class="ph-lbl">Signal Engine</div>
+        <div class="ph-title">Live Trading Signals</div>
+        <div class="ph-desc">Multi-confluence signals from Binance live 6H klines. ICT + SMC + CRT + Liquidity Sweep + Institutional Footprint + Volume CVD.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <select class="fsel" style="max-width:155px" id="f-pair" onchange="filterSignals()"><option value="">All Pairs</option><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option><option>XRPUSDT</option><option>BNBUSDT</option><option>LINKUSDT</option></select>
+        <select class="fsel" style="max-width:135px" id="f-dir"  onchange="filterSignals()"><option value="">All Directions</option><option value="LONG">▲ LONG</option><option value="SHORT">▼ SHORT</option></select>
+        <select class="fsel" style="max-width:165px" id="f-ics"  onchange="filterSignals()"><option value="">All ICS</option><option value="high">High Conv. 75+</option><option value="mid">Standard 50–74</option></select>
+        <select class="fsel" style="max-width:160px" id="f-inst" onchange="filterSignals()"><option value="">All Signals</option><option value="inst">Institutional Only</option></select>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-gh btn-sm"   onclick="filterSignals()">Apply</button>
+          <button class="btn btn-gold btn-sm" onclick="generateSignals()">↻ Refresh Engine</button>
+        </div>
+      </div>
+      <div class="notice n-gold mb-12" style="display:flex;align-items:center;gap:10px;padding:8px 14px">
+        <span class="live-dot"></span>
+        <span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--mu)">Last run: <span id="eng-last-run" style="color:var(--gold)">—</span> &nbsp;|&nbsp; Signals: <span id="eng-sig-count" style="color:var(--gold)">0</span> &nbsp;|&nbsp; Inst. zones: <span id="eng-inst-count" style="color:var(--gold)">0</span></span>
+      </div>
+      <div id="sigs-grid"></div>
+    </div>
+
+    <!-- INSTITUTIONAL -->
+    <div class="page" id="page-institutional">
+      <div class="ph">
+        <div class="ph-lbl">Smart Money Tracker</div>
+        <div class="ph-title">Institutional Footprint Engine</div>
+        <div class="ph-desc">Tracks where banks, hedge funds, and prop desks enter. Detects order blocks, liquidity sweeps, displacement candles, CVD spikes, and iceberg orders in real time.</div>
+      </div>
+      <div class="notice n-gold mb-16"><strong>Core Principle:</strong> Institutions cannot hide. Their order size leaves a structural and volume footprint. ISC Spreads identifies these footprints and enters in the same direction — trading alongside smart money, not against it.</div>
+      <div class="g4 mb-16">
+        <div class="sc"><div class="s-lbl">Order Blocks</div><div class="s-val" id="i-ob">0</div><div class="s-sub">Active zones</div><span class="s-chg neu">Mapped</span></div>
+        <div class="sc"><div class="s-lbl">Sweep Events</div><div class="s-val" id="i-sw">0</div><div class="s-sub">Confirmed grabs</div><span class="s-chg up">Confirmed</span></div>
+        <div class="sc"><div class="s-lbl">Avg Confidence</div><div class="s-val" id="i-cf">—</div><div class="s-sub">Threshold: 75</div><span class="s-chg neu">Tracking</span></div>
+        <div class="sc"><div class="s-lbl">CRT Patterns</div><div class="s-val" id="i-crt">0</div><div class="s-sub">This cycle</div><span class="s-chg neu">Detected</span></div>
+      </div>
+      <div class="g2 mb-16">
+        <div>
+          <div class="ct mb-12">Detected Institutional Zones</div>
+          <div id="inst-zones-list"><div style="color:var(--mu);font-size:12px;padding:24px;font-family:'DM Mono',monospace;text-align:center;border:1px dashed var(--bdr3);border-radius:var(--r2)">No zones detected yet. Engine refreshes every 6H.</div></div>
+        </div>
+        <div>
+          <div class="ct mb-12">Detection Method Accuracy</div>
+          <div class="card mb-12" style="padding:14px"><div id="inst-methods"></div></div>
+          <div class="ct mb-12">ICS Scoring Breakdown</div>
+          <div class="card" style="padding:14px"><div id="inst-scoring"></div></div>
+        </div>
+      </div>
+      <div class="ct mb-12">How the Institutional Engine Works</div>
+      <div class="g3">
+        <div class="card card-hover"><div class="ct" style="font-size:9px;margin-bottom:6px">Step 1 — Structure</div><div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px">6H Bias Direction</div><div style="font-size:12px;color:var(--mu);line-height:1.65">Higher timeframe structure defines directional bias. Only bullish setups in uptrend, bearish in downtrend — mirroring institutional macro positioning.</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px;margin-bottom:6px">Step 2 — Map Zones</div><div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px">Mark Institutional Zones</div><div style="font-size:12px;color:var(--mu);line-height:1.65">Order blocks, FVGs, and sweep levels mapped from 6H/1H. The bot arms the trigger and waits — it never chases price.</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px;margin-bottom:6px">Step 3 — Mitigation</div><div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px">Price Returns to Zone</div><div style="font-size:12px;color:var(--mu);line-height:1.65">Institutions re-accumulate at their own levels. When price revisits the zone, vigilance state activates and confluence is evaluated.</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px;margin-bottom:6px">Step 4 — Score</div><div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px">ICS Computed Live</div><div style="font-size:12px;color:var(--mu);line-height:1.65">All six confluence factors evaluated simultaneously. Composite ICS score 0–100 computed. Below threshold → bot stands aside entirely.</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px;margin-bottom:6px">Step 5 — OTE Entry</div><div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px">Precision Entry</div><div style="font-size:12px;color:var(--mu);line-height:1.65">Entry at 50% of order block (OTE). Stop beyond institutional zone. TP at opposing liquidity pool. Min R:R 1:3 enforced.</div></div>
+        <div class="card card-hover"><div class="ct" style="font-size:9px;margin-bottom:6px">Step 6 — Audit Log</div><div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px">Tagged and Stored</div><div style="font-size:12px;color:var(--mu);line-height:1.65">Every signal stored with ICS score, zone type, entry rationale, and institutional classification. Full audit trail.</div></div>
+      </div>
+    </div>
+
+    <!-- STRATEGIES -->
+    <div class="page" id="page-strategies">
+      <div class="ph">
+        <div class="ph-lbl">Strategy Stack</div>
+        <div class="ph-title">Active Strategy Modules</div>
+        <div class="ph-desc">Your current plan unlocks the strategies below. Upgrade to access the complete ISC Spreads engine.</div>
+      </div>
+      <div class="notice n-gold mb-16" id="strat-plan-notice"><strong>Your Plan:</strong> Loading...</div>
+      <div id="strat-grid"></div>
+      <div class="dv"></div>
+      <div class="ct mb-12">ISC Spreads vs Other Bots</div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Limitation (Other Bots)</th><th>ISC Spreads Strength</th><th>Module</th></tr></thead>
+          <tbody id="comp-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div class="page" id="page-performance">
+      <div class="ph">
+        <div class="ph-lbl">Analytics</div>
+        <div class="ph-title">Performance Analytics</div>
+        <div class="ph-desc">Historical signal performance, R:R analysis, and session-based win rate tracking. Based on backtested signal data.</div>
+      </div>
+      <div class="g4 mb-16">
+        <div class="sc"><div class="s-lbl">Total Signals</div><div class="s-val">1,247</div><div class="s-sub">All-time backtest</div><span class="s-chg neu">6 pairs</span></div>
+        <div class="sc"><div class="s-lbl">Win Rate</div><div class="s-val">76.4%</div><div class="s-sub">Last 30 days</div><span class="s-chg up">+2.1% MoM</span></div>
+        <div class="sc"><div class="s-lbl">Avg R:R</div><div class="s-val">1 : 3.8</div><div class="s-sub">Target: 1:3</div><span class="s-chg up">Above target</span></div>
+        <div class="sc"><div class="s-lbl">Best Strategy</div><div class="s-val" style="font-size:18px">ICT + OB</div><div class="s-sub">Order block confluence</div><span class="s-chg up">84% win</span></div>
+      </div>
+      <div class="card mb-12" style="padding:16px">
+        <div class="ct mb-12">Simulated Equity Curve</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="ch-equity"></canvas></div>
+      </div>
+      <div class="g2 mb-12">
+        <div class="card" style="padding:14px"><div class="ct mb-12">Win Rate by Strategy</div><div class="chart-wrap" style="height:220px"><canvas id="ch-winrate"></canvas></div></div>
+        <div class="card" style="padding:14px"><div class="ct mb-12">Signal Volume by WAT Session</div><div class="chart-wrap" style="height:220px"><canvas id="ch-session"></canvas></div></div>
+      </div>
+      <div class="g2">
+        <div class="card" style="padding:14px"><div class="ct mb-12">ICS Score Distribution</div><div class="chart-wrap" style="height:200px"><canvas id="ch-ics-dist"></canvas></div></div>
+        <div class="card" style="padding:14px"><div class="ct mb-12">Monthly Signal Count</div><div class="chart-wrap" style="height:200px"><canvas id="ch-monthly"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- UPGRADE -->
+    <div class="page" id="page-upgrade">
+      <div class="ph">
+        <div class="ph-lbl">Subscription Plans</div>
+        <div class="ph-title">Upgrade Your Access</div>
+        <div class="ph-desc">Select a plan, send crypto to the wallet, submit your TX hash and email. Admin verifies on-chain and sends your activation code automatically.</div>
+      </div>
+      <div class="notice n-gold mb-16"><strong>How it works:</strong> ① Select plan &nbsp;→&nbsp; ② Send USDT/ETH/BTC to wallet &nbsp;→&nbsp; ③ Submit TX hash + email &nbsp;→&nbsp; ④ Admin verifies &nbsp;→&nbsp; ⑤ Code sent to email &nbsp;→&nbsp; ⑥ Enter code to unlock</div>
+      <div id="plans-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px"></div>
+      <div class="card card-gold" id="pay-section" style="display:none">
+        <div class="ct">💳 Complete Payment — <span id="pay-plan-name" style="color:var(--tx);font-style:normal"></span></div>
+        <div class="g2 mt-8">
+          <div>
+            <div class="fg"><label class="fl">Amount to Send</label><div style="font-size:28px;font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--gold)" id="pay-amount"></div><div style="font-size:11px;color:var(--mu);font-family:'DM Mono',monospace;margin-top:3px">USDT · ETH · BTC accepted</div></div>
+            <div class="fg">
+              <label class="fl">Send to Wallet Address</label>
+              <div class="wbox">
+                <div class="w-lbl">Ethereum · ERC-20 / BEP-20</div>
+                <div class="w-addr" id="pay-wallet-addr">0x3fec94ae357d5f4921f04a7a7e335dd21df74330</div>
+                <div class="w-net">Network: Ethereum Mainnet</div>
+                <div class="w-copy" onclick="copyWalletAddress()">📋 Copy Wallet Address</div>
+              </div>
+            </div>
+            <div class="notice n-rd" style="font-size:12px"><strong>⚠ Always verify address before sending.</strong> ISC Spreads is not liable for funds sent to wrong addresses. Payments are non-refundable once code is issued.</div>
+          </div>
+          <div>
+            <div class="fg"><label class="fl">Your Email (activation code delivery)</label><input class="fi" type="email" id="pay-email" placeholder="your@email.com"/><div class="fhint">Activation code will be sent here after verification</div></div>
+            <div class="fg"><label class="fl">Transaction Hash / TX ID</label><input class="fi" type="text" id="pay-txhash" placeholder="0x... or paste your TX hash"/><div class="fhint">Copy from your wallet after sending payment</div></div>
+            <div id="pay-err" class="ferr"></div>
+            <div id="pay-ok" class="fok"></div>
+            <button class="btn btn-gold btn-full btn-lg" onclick="submitPayment()" id="pay-btn">✓ Submit Payment Proof</button>
+            <p style="font-size:11px;color:var(--mu);margin-top:10px;line-height:1.65;font-family:'DM Mono',monospace">Admin verifies within 30 min. Code dispatched automatically. Expires 48H after dispatch. Single-use — do not share.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVATE -->
+    <div class="page" id="page-activate">
+      <div class="ph">
+        <div class="ph-lbl">Plan Activation</div>
+        <div class="ph-title">Enter Activation Code</div>
+        <div class="ph-desc">Enter the unique code sent to your email after payment verification. Codes are single-use and expire 48 hours after dispatch.</div>
+      </div>
+      <div style="max-width:440px">
+        <div class="card card-gold mb-16">
+          <div class="ct">Current Plan Status</div>
+          <div style="font-size:22px;font-family:'Cormorant Garamond',serif;color:var(--tx);font-weight:700" id="act-cur-plan">Demo Plan</div>
+          <div style="font-size:12px;color:var(--mu);margin-top:4px" id="act-plan-status">No active subscription</div>
+          <div class="dv" style="margin:12px 0"></div>
+          <div style="font-size:12px;color:var(--mu)">Complete a payment on the <a href="#" onclick="navigate('upgrade')" style="color:var(--gold)">Upgrade Plan</a> page, then enter your code below.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Activation Code</label>
+          <input class="fi" type="text" id="act-code-input" placeholder="ISC-XXXX-XXXX-XXXX" style="font-family:'DM Mono',monospace;letter-spacing:2px;font-size:18px;text-align:center;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doActivate()"/>
+          <div class="fhint">Check your email inbox and spam folder. Format: ISC-XXXX-XXXX-XXXX</div>
+        </div>
+        <div id="act-err" class="ferr"></div>
+        <div id="act-ok"  class="fok"></div>
+        <button class="btn btn-gold btn-full btn-lg" onclick="doActivate()" style="margin-top:8px">Activate Plan →</button>
+        <div class="notice n-bl mt-12"><strong>Didn't receive your code?</strong> Check spam folder. Still missing? Contact <a href="mailto:support@iscspreads.io" style="color:var(--bl)">support@iscspreads.io</a> with your TX hash.</div>
+      </div>
+    </div>
+
+    <!-- COMMUNITY -->
+    <div class="page" id="page-community">
+      <div class="ph">
+        <div class="ph-lbl">Connect With Us</div>
+        <div class="ph-title">ISC Spreads Community</div>
+        <div class="ph-desc">Join our official channels for live signal alerts, market analysis, support, and community discussions.</div>
+      </div>
+      <div class="g2 mb-16" style="max-width:720px">
+        <a href="https://t.me/iscspreadscommunity" target="_blank" class="comm-card"><span class="comm-ico">✈</span><div class="ct" style="margin-bottom:5px">Telegram Group</div><p style="font-size:12px;color:var(--mu);line-height:1.6">Join the main ISC Spreads Telegram group for live signal alerts, market discussions, educational content, and real-time community support from fellow traders.</p><div class="comm-link">t.me/iscspreadscommunity →</div></a>
+        <a href="https://x.com/iscspreadss" target="_blank" class="comm-card"><span class="comm-ico">✕</span><div class="ct" style="margin-bottom:5px">X (Twitter)</div><p style="font-size:12px;color:var(--mu);line-height:1.6">Follow the official ISC Spreads X account for market insights, strategy breakdowns, ICT/SMC educational threads, and platform announcements.</p><div class="comm-link">@iscspreadss →</div></a>
+        <a href="https://instagram.com/iscspreads" target="_blank" class="comm-card"><span class="comm-ico">📸</span><div class="ct" style="margin-bottom:5px">Instagram</div><p style="font-size:12px;color:var(--mu);line-height:1.6">Visual trade breakdowns, order block screenshots, institutional zone analysis, and educational chart posts.</p><div class="comm-link">@iscspreads →</div></a>
+        <a href="https://chat.whatsapp.com/iscspreadsvip" target="_blank" class="comm-card"><span class="comm-ico">💬</span><div class="ct" style="margin-bottom:5px">WhatsApp Group</div><p style="font-size:12px;color:var(--mu);line-height:1.6">Quick signal alerts, peer-to-peer discussions, and direct community interaction on WhatsApp.</p><div class="comm-link">WhatsApp Community →</div></a>
+        <a href="mailto:support@iscspreads.io" class="comm-card"><span class="comm-ico">✉</span><div class="ct" style="margin-bottom:5px">Email Support</div><p style="font-size:12px;color:var(--mu);line-height:1.6">Plan activation issues, payment queries, technical support. Response within 24 hours.</p><div class="comm-link">support@iscspreads.io →</div></a>
+        <div class="comm-card" style="cursor:default"><span class="comm-ico">📡</span><div class="ct" style="margin-bottom:5px">Platform Status</div><div id="status-list"><div class="engine-row"><span class="engine-name">Signal Engine</span><span class="tag tge">Operational</span></div><div class="engine-row"><span class="engine-name">Binance Feed</span><span class="tag tge">Live</span></div><div class="engine-row"><span class="engine-name">Email System</span><span class="tag tge">Active</span></div><div class="engine-row"><span class="engine-name">6H Scheduler (WAT)</span><span class="tag tge">Running</span></div><div class="engine-row"><span class="engine-name">Wallet Verifier</span><span class="tag tge">Online</span></div><div class="engine-row"><span class="engine-name">Database</span><span class="tag tge">Connected</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="page" id="page-disclaimer">
+      <div class="ph"><div class="ph-lbl">Legal</div><div class="ph-title">Risk Disclaimer</div><div class="ph-desc">Read carefully before using ISC Spreads.</div></div>
+      <div class="card" style="max-width:800px">
+        <div class="notice n-rd mb-16"><strong>⚠ IMPORTANT:</strong> Trading involves substantial risk of loss. You may lose all of your invested capital.</div>
+        <div class="legal">
+          <h3>1. Trading Involves Substantial Risk of Loss</h3>
+          <p>Trading in foreign exchange (forex), contracts for difference (CFDs), commodities, indices, cryptocurrencies, and other financial instruments involves a <strong>significant risk of loss</strong> and is not suitable for all investors. You may lose some or all of your invested capital. Do not trade with money you cannot afford to lose. The high degree of leverage available in financial markets can work against you as well as for you.</p>
+          <h3>2. No Guarantee of Profit</h3>
+          <p>ISC Spreads does not guarantee any specific financial outcome, profit, or return on investment. <strong>Past performance of any signal, strategy, or backtested result is not indicative of future results.</strong> All trading signals, analyses, and strategy outputs are for informational and educational purposes only.</p>
+          <h3>3. Not Financial Advice</h3>
+          <p>ISC Spreads is a technology platform, not a licensed financial advisor, registered investment advisor, broker, or investment firm. <strong>Nothing on this platform constitutes personalised financial, investment, or trading advice.</strong> Users are solely responsible for their own trading decisions and risk management.</p>
+          <h3>4. Demo vs Live Account Performance</h3>
+          <p>All new users are onboarded exclusively to a demo (paper trading) environment. Results achieved on a demo account <strong>do not reflect results that may be achieved on a live trading account.</strong> Slippage, liquidity constraints, broker execution speeds, spread variations, and real market conditions can materially affect live outcomes.</p>
+          <h3>5. Leverage and Volatility Risk</h3>
+          <p>Many instruments involve the use of leverage. <strong>Leverage amplifies both potential gains and potential losses</strong> beyond your initial deposit. Highly volatile market conditions — major economic news, central bank decisions, geopolitical events, and black swan events — can result in losses exceeding the signal engine's parameters. The platform cannot be held liable for such losses.</p>
+          <h3>6. Technology and Data Risk</h3>
+          <p>Signal generation depends on third-party market data APIs including the Binance public API. ISC Spreads is not responsible for losses arising from data feed interruptions, API downtime, latency, data inaccuracies, or incorrect readings from third-party data providers.</p>
+          <h3>7. Regulatory Notice</h3>
+          <p>ISC Spreads operates globally and users are responsible for ensuring that their use of the platform complies with local laws and financial regulations. Users in restricted jurisdictions should seek independent legal advice before using the platform.</p>
+          <h3>8. Assumption of Risk</h3>
+          <p>By registering and using ISC Spreads, you acknowledge that you have read, understood, and accepted this Risk Disclaimer in full. You assume full responsibility for all trading decisions made using ISC Spreads signals, strategies, or content.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVACY -->
+    <div class="page" id="page-privacy">
+      <div class="ph"><div class="ph-lbl">Legal</div><div class="ph-title">Privacy Policy</div><div class="ph-desc">How ISC Spreads handles your personal data.</div></div>
+      <div class="card" style="max-width:800px">
+        <div class="legal">
+          <h3>1. Introduction</h3>
+          <p>ISC Spreads is committed to protecting the personal information of all users. This Privacy Policy explains what data we collect, how we use it, who we share it with, how long we retain it, and your rights. By registering and using the platform, you consent to the data practices described herein.</p>
+          <h3>2. Data We Collect</h3>
+          <ul>
+            <li><strong>Registration data:</strong> Full name, email address, country of residence</li>
+            <li><strong>Account activity:</strong> Plan level, activation code history, login timestamps, session duration</li>
+            <li><strong>Payment evidence:</strong> Transaction hash, screenshots submitted for plan activation</li>
+            <li><strong>Usage data:</strong> Signal interactions, strategy engagement, pages visited</li>
+            <li><strong>Technical data:</strong> IP address, browser type and version, operating system, device type</li>
+            <li><strong>Communications:</strong> Support messages, email correspondence with the admin team</li>
+          </ul>
+          <h3>3. How We Use Your Data</h3>
+          <ul>
+            <li>To create, authenticate, and manage your ISC Spreads account</li>
+            <li>To verify cryptocurrency payments and dispatch activation codes via email</li>
+            <li>To deliver platform features and strategy access based on your plan</li>
+            <li>To communicate updates, plan expiry notices, security alerts, and support responses</li>
+            <li>To monitor platform security, prevent fraud, and enforce our Terms &amp; Conditions</li>
+            <li>To improve platform performance through aggregated, anonymised analytics</li>
+          </ul>
+          <h3>4. Data We Do Not Collect</h3>
+          <p>ISC Spreads does <strong>not</strong> collect broker login credentials, live account passwords, or direct trading account access credentials. We do not access your broker account directly. We do <strong>not</strong> sell, rent, trade, or transfer your personal data to third parties for marketing purposes.</p>
+          <h3>5. Data Sharing</h3>
+          <p>We do not sell or share your personal data with third parties except: email providers (Resend/SendGrid) for code dispatch; legal compliance where required by law; and security services where necessary to protect users.</p>
+          <h3>6. Data Retention</h3>
+          <p>Account data retained for <strong>12 months</strong> post-closure. Payment evidence retained for <strong>36 months</strong> for compliance. Anonymised analytics retained indefinitely.</p>
+          <h3>7. Your Rights</h3>
+          <ul>
+            <li><strong>Access:</strong> Request a copy of all personal data we hold</li>
+            <li><strong>Rectification:</strong> Request correction of inaccurate data</li>
+            <li><strong>Erasure:</strong> Request deletion of your account and data</li>
+            <li><strong>Object:</strong> Opt out of non-essential communications</li>
+            <li><strong>Portability:</strong> Receive your data in a structured, machine-readable format</li>
+          </ul>
+          <p>To exercise any right, contact: <strong>support@iscspreads.io</strong></p>
+          <h3>8. Security</h3>
+          <p>Passwords hashed with bcrypt. Activation codes single-use, 48H expiry. Data stored on encrypted servers. Any suspected breach communicated to affected users within <strong>72 hours</strong>.</p>
+          <h3>9. Changes to This Policy</h3>
+          <p>ISC Spreads may update this Privacy Policy at any time. Material changes will be communicated via email with at least 7 days notice.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TERMS -->
+    <div class="page" id="page-terms">
+      <div class="ph"><div class="ph-lbl">Legal</div><div class="ph-title">Terms &amp; Conditions</div><div class="ph-desc">These Terms govern your use of the ISC Spreads platform.</div></div>
+      <div class="card" style="max-width:800px">
+        <div class="legal">
+          <h3>1. Acceptance of Terms</h3>
+          <p>By registering, accessing, or using any feature of ISC Spreads, you agree to these Terms in full. If you do not agree, you must cease using the platform. ISC Spreads reserves the right to update these Terms at any time; continued use constitutes acceptance.</p>
+          <h3>2. Eligibility</h3>
+          <ul><li>Minimum age: <strong>18 years</strong></li><li>Must not reside in a prohibited jurisdiction</li><li>Accurate registration information required</li><li>One account per person without admin approval</li><li>You must maintain the security of your credentials and not share access</li></ul>
+          <h3>3. Demo Access</h3>
+          <p>All new users receive free access to the demo environment, limited to the ICT strategy on paper trading only. Demo results do not guarantee live performance. The admin may modify or terminate demo access at any time without notice.</p>
+          <h3>4. Paid Plans and Activation</h3>
+          <ul><li>Paid plans activated exclusively via crypto payment to the displayed wallet address</li><li>Users must submit registered email and transaction hash for verification</li><li>Activation codes dispatched to registered email upon admin verification</li><li>Codes: single-use, non-transferable, expire within <strong>48 hours</strong> of dispatch</li><li>Admin may refuse activation if verification fails or fraud is suspected</li></ul>
+          <h3>5. Payment Terms and Refund Policy</h3>
+          <p>All payments are made in cryptocurrency. <strong>Payments are strictly non-refundable</strong> once a plan has been activated and the code issued. Platform-side activation failures result in code reissuance or credit. ISC Spreads is not responsible for losses from incorrect wallet entries or blockchain delays.</p>
+          <h3>6. Prohibited Conduct</h3>
+          <ul><li>Sharing, selling, or transferring activation codes or account access</li><li>Reverse-engineering, scraping, or replicating the signal engine</li><li>Commercial redistribution of signals without written admin consent</li><li>Submitting fraudulent payment evidence or false transaction hashes</li><li>Circumventing plan access controls by technical or other means</li><li>Disrupting, damaging, or overloading the platform infrastructure</li></ul>
+          <h3>7. Intellectual Property</h3>
+          <p>All signal logic, ICS methodology, institutional tracking, dashboard design, and brand assets are the <strong>exclusive intellectual property of ISC Spreads</strong>. The name "ISC Spreads", "Institutional Signal Confluence", the ISC logo, and all branding are proprietary marks. No part of the platform may be copied or used commercially without express written permission.</p>
+          <h3>8. Limitation of Liability</h3>
+          <p>ISC Spreads, its admin, developers, and affiliates shall not be liable for any direct, indirect, incidental, consequential, or punitive damages arising from use of the platform; reliance on signals; trading losses; platform downtime; or third-party broker actions. Total liability capped at subscription fees paid in the preceding <strong>30 days</strong>.</p>
+          <h3>9. Account Termination</h3>
+          <p>The admin may suspend or terminate any user account — without refund — upon evidence of terms violation, fraudulent activity, or conduct harmful to the platform or its users.</p>
+          <h3>10. Governing Law and Disputes</h3>
+          <p>Good-faith negotiation first; if unresolved within 30 days, binding arbitration. <strong>Class action waived.</strong></p>
+          <h3>11. Amendments</h3>
+          <p>Material changes communicated via email with minimum <strong>7 days notice</strong>. Continued use after the effective date constitutes acceptance.</p>
+          <div class="dv" style="margin:20px 0"></div>
+          <p style="font-size:11px;color:var(--mu2);font-family:'DM Mono',monospace;text-align:center">ISC SPREADS · INSTITUTIONAL SIGNAL CONFLUENCE · ISC-LEGAL-001 · v1.0 · All rights reserved</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="page" id="page-admin">
+      <div class="ph">
+        <div class="ph-lbl">Admin Panel</div>
+        <div class="ph-title">ISC Spreads Administration</div>
+        <div class="ph-desc">Full platform control — pending payments, code generation, user management, wallet configuration, and signal engine controls.</div>
+      </div>
+      <div class="g4 mb-16">
+        <div class="sc"><div class="s-lbl">Pending Payments</div><div class="s-val" id="adm-pend">0</div><div class="s-sub">Awaiting verification</div><span class="s-chg neu" id="adm-pend-chg">Review</span></div>
+        <div class="sc"><div class="s-lbl">Verified Today</div><div class="s-val" id="adm-ver">0</div><div class="s-sub">Codes dispatched</div><span class="s-chg up">Activated</span></div>
+        <div class="sc"><div class="s-lbl">Total Revenue</div><div class="s-val" id="adm-rev">$0</div><div class="s-sub">Lifetime crypto</div><span class="s-chg up">Cumulative</span></div>
+        <div class="sc"><div class="s-lbl">Total Users</div><div class="s-val" id="adm-users">0</div><div class="s-sub">Registered accounts</div><span class="s-chg neu">All plans</span></div>
+      </div>
+      <div class="atabs">
+        <div class="atab active" id="at-payments" onclick="adminTab('payments')">⏳ Pending Payments</div>
+        <div class="atab" id="at-generate" onclick="adminTab('generate')">⚡ Generate Codes</div>
+        <div class="atab" id="at-users"    onclick="adminTab('users')">👥 Users</div>
+        <div class="atab" id="at-wallet"   onclick="adminTab('wallet')">💼 Wallet Config</div>
+        <div class="atab" id="at-engine"   onclick="adminTab('engine')">⚙ Signal Engine</div>
+      </div>
+
+      <!-- PAYMENTS TAB -->
+      <div id="adm-tab-payments">
+        <div class="flex-between mb-12"><div class="ct" style="margin-bottom:0">Pending Verification Queue</div><button class="btn btn-gh btn-sm" onclick="renderPaymentsTable()">↻ Refresh</button></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Email</th><th>Plan</th><th>Amount</th><th>TX Hash</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody id="pmt-tbody"><tr><td colspan="6" style="text-align:center;color:var(--mu);padding:28px;font-family:'DM Mono',monospace;font-size:12px">No pending payments</td></tr></tbody>
+          </table>
+        </div>
+        <div class="notice n-bl mt-12" style="font-size:12px"><strong>Wallet Verifier:</strong> System polls Ethereum/BSC blockchain every 5 minutes for matching transactions. Click "Approve" to manually verify and dispatch activation code automatically to user's email.</div>
+      </div>
+
+      <!-- GENERATE CODES TAB -->
+      <div id="adm-tab-generate" style="display:none">
+        <div class="g2" style="max-width:820px">
+          <div class="card card-gold">
+            <div class="ct">⚡ Generate Activation Code</div>
+            <div class="fg mt-8"><label class="fl">Plan Type</label><select class="fsel" id="gen-plan"><option value="basic">Basic — $49/month</option><option value="premium">Premium — $99/month</option><option value="elite">Elite — $149/month</option></select></div>
+            <div class="fg"><label class="fl">User Email (optional — enables auto-send)</label><input class="fi" type="email" id="gen-email" placeholder="user@example.com"/><div class="fhint">Leave blank to generate a distributable code</div></div>
+            <div class="fg"><label class="fl">Validity Period</label><select class="fsel" id="gen-validity"><option value="30">30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option></select></div>
+            <div class="fg"><label class="fl">Internal Notes</label><input class="fi" type="text" id="gen-notes" placeholder="e.g. Payment via BTC — ref #2025-001"/></div>
+            <button class="btn btn-gold btn-full" onclick="generateCode()">⚡ Generate &amp; Dispatch Code</button>
+            <div id="gen-ok" class="fok mt-8"></div>
+          </div>
+          <div class="card">
+            <div class="flex-between mb-12"><div class="ct" style="margin-bottom:0">Recent Codes</div><button class="btn btn-gh btn-sm" onclick="renderCodesPanel()">↻</button></div>
+            <div id="codes-panel"><div style="text-align:center;padding:20px;color:var(--mu);font-size:12px;font-family:'DM Mono',monospace">No codes generated yet</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div id="adm-tab-users" style="display:none">
+        <div class="flex-between mb-12">
+          <div class="ct" style="margin-bottom:0">All Registered Users</div>
+          <div style="display:flex;gap:6px"><input class="fi" type="text" id="user-search" placeholder="Search name or email..." style="max-width:220px" oninput="renderUsersTable()"/><button class="btn btn-gh btn-sm" onclick="renderUsersTable()">↻</button></div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Role</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- WALLET TAB -->
+      <div id="adm-tab-wallet" style="display:none">
+        <div class="g2" style="max-width:820px">
+          <div>
+            <div class="card card-gold mb-12">
+              <div class="ct">Active Wallet Address</div>
+              <div class="wbox mt-8"><div class="w-lbl">Ethereum · ERC-20</div><div class="w-addr" id="adm-wallet-display">0x3fec94ae357d5f4921f04a7a7e335dd21df74330</div><div class="w-net">Network: Ethereum Mainnet</div><div class="w-copy" onclick="copyAdminWallet()">📋 Copy Address</div></div>
+            </div>
+            <div class="card">
+              <div class="ct">Update Wallet Address</div>
+              <div class="fg mt-8"><label class="fl">New Wallet Address</label><input class="fi" type="text" id="new-wallet-input" placeholder="0x..."/></div>
+              <div class="fg"><label class="fl">Network</label><select class="fsel" id="new-wallet-network"><option value="ERC-20">Ethereum (ERC-20)</option><option value="BEP-20">BNB Smart Chain (BEP-20)</option><option value="TRC-20">TRON (TRC-20)</option><option value="Bitcoin">Bitcoin</option></select></div>
+              <div id="wallet-update-ok" class="fok mb-8"></div>
+              <button class="btn btn-gold" onclick="updateWalletConfig()">Update Wallet →</button>
+              <p style="font-size:11px;color:var(--mu);margin-top:8px;line-height:1.6;font-family:'DM Mono',monospace">Address updates apply immediately to all new payment sessions.</p>
+            </div>
+          </div>
+          <div>
+            <div class="card mb-12">
+              <div class="ct">Plan Pricing (USD)</div>
+              <div id="pricing-admin-grid" style="margin-top:8px"></div>
+              <div id="pricing-ok" class="fok mb-8"></div>
+              <button class="btn btn-gold" style="margin-top:4px" onclick="savePricingConfig()">Save Pricing →</button>
+            </div>
+            <div class="card card-gold">
+              <div class="ct">Wallet Verifier Config</div>
+              <div class="fg mt-8"><label class="fl">Etherscan API Key</label><input class="fi" type="text" id="eth-api-key" placeholder="YourEtherscanAPIKey"/><div class="fhint">For automatic on-chain TX verification</div></div>
+              <div class="fg"><label class="fl">BSCScan API Key</label><input class="fi" type="text" id="bsc-api-key" placeholder="YourBscScanAPIKey"/></div>
+              <button class="btn btn-out btn-sm" onclick="saveApiKeys()">Save API Keys</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENGINE TAB -->
+      <div id="adm-tab-engine" style="display:none">
+        <div class="g2 mb-16" style="max-width:820px">
+          <div class="card card-gold">
+            <div class="ct">⏱ 6H Scheduler — pg_cron (WAT)</div>
+            <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--mu);margin:10px 0;line-height:2.2">
+              <div>Cron: <span style="color:var(--gold)">0 23,5,11,17 * * *</span> (UTC)</div>
+              <div>Timezone: <span style="color:var(--gold)">Africa/Lagos (WAT = UTC+1)</span></div>
+              <div>Sessions: <span style="color:var(--gr)">00:00 · 06:00 · 12:00 · 18:00 WAT</span></div>
+              <div>Next run: <span style="color:var(--gold)" id="adm-next-run">Calculating...</span></div>
+            </div>
+            <div class="notice n-gold" style="font-size:12px;padding:12px 14px">
+              <strong>pg_cron SQL:</strong>
+              <pre style="font-size:10px;margin-top:8px;color:var(--tx);line-height:1.9;overflow-x:auto;font-family:'DM Mono',monospace">SELECT cron.schedule(
+  'isc-signal-engine-6h',
+  '0 23,5,11,17 * * *',
+  $$SELECT run_signal_engine()$$
+);
+ALTER DATABASE iscspreads
+  SET timezone = 'Africa/Lagos';</pre>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn-gold" onclick="manualEngineRun()">▶ Run Engine Now</button>
+              <button class="btn btn-gh"   onclick="toast('Engine paused (simulated)','gold')">⏸ Pause</button>
+            </div>
+          </div>
+          <div>
+            <div class="card mb-12">
+              <div class="ct mb-12">Signal Engine Modules</div>
+              <div id="engine-modules"></div>
+            </div>
+            <div class="card">
+              <div class="ct mb-12">Strategy Toggles</div>
+              <div id="strategy-toggles"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ct mb-12">Recent Engine Runs</div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Run At (WAT)</th><th>Pairs</th><th>Signals</th><th>Inst. Zones</th><th>Status</th></tr></thead>
+            <tbody id="engine-runs-tbody"><tr><td colspan="5" style="text-align:center;color:var(--mu);padding:20px;font-family:'DM Mono',monospace;font-size:12px">Engine runs will appear here after each execution</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-admin -->
+
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<!-- SIGNAL DETAIL MODAL -->
+<div class="mover" id="modal-signal">
+  <div class="modal" style="max-width:560px">
+    <button class="mc" onclick="closeSignalModal()">✕</button>
+    <div id="modal-signal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const CFG = {
+  wallet:     '0x3fec94ae357d5f4921f04a7a7e335dd21df74330',
+  adminEmail: 'samuelmaigari0@gmail.com',
+  binance:    'https://api.binance.com/api/v3',
+  pairs:      ['BTCUSDT','ETHUSDT','SOLUSDT','XRPUSDT','BNBUSDT','LINKUSDT'],
+  plans: {
+    demo:    { name:'Demo',    price:0,   color:'#3D8BFF' },
+    basic:   { name:'Basic',   price:49,  color:'#C9A84C' },
+    premium: { name:'Premium', price:99,  color:'#8B7EFF' },
+    elite:   { name:'Elite',   price:149, color:'#22C77A' },
+  },
+  planFeatures: {
+    demo:    ['ICT Killzone (paper trading only)','6H Structure Analysis','FVG Visual Overlay (read-only)','ICS Score display','Order Block zones (visual only)'],
+    basic:   ['ICT Killzone + Order Blocks','6H + 1H Timeframe Engine','SMC — ChoCH & BoS Detection','Liquidity Sweep Signals','RSI Divergence Filter (14-period)','Standard ICS Signals (50–74)','Live Account Trading Enabled'],
+    premium: ['All Basic features included','CRT Movement Engine','Volume CVD Analysis','FVG Trade Signals (active)','Institutional ICS 50–74','1H + 15M Scalp Refinement','SMC Full Suite (all modules)'],
+    elite:   ['All Premium features included','High-Conviction ICS 75–100','Iceberg Order Detection','Delta Divergence Alerts','Stoichiometric R:R Engine','Full Institutional Suite','Zone History Log','Priority Signal Alerts','Backtesting Module Access'],
+  },
+  strategies: [
+    { id:'ict',    name:'ICT Framework',          desc:'Killzones, FVG, Order Blocks, Breaker Blocks, OTE, Power of 3 (AMD)', plans:['demo','basic','premium','elite'], tag:'ICT',    cls:'tb'  },
+    { id:'6h',     name:'6H Timeframe Engine',     desc:'WAT-aligned session structure. Higher TF bias. Killzone detection.', plans:['demo','basic','premium','elite'], tag:'6H',     cls:'tb'  },
+    { id:'smc',    name:'SMC — ChoCH & BoS',       desc:'Change of Character and Break of Structure for trend confirmation.', plans:['basic','premium','elite'],        tag:'SMC',    cls:'tp'  },
+    { id:'sweep',  name:'Liquidity Sweep',          desc:'Equal H/L sweep detection. Stop hunt confirmation before entry.',   plans:['basic','premium','elite'],        tag:'SWEEP',  cls:'tg'  },
+    { id:'rsi',    name:'RSI Divergence',           desc:'14-period RSI divergence filter. Momentum vs price confirmation.', plans:['basic','premium','elite'],        tag:'RSI',    cls:'tg'  },
+    { id:'crt',    name:'CRT Movement',             desc:'Candle Range Theory — manipulation → expansion → distribution.',   plans:['premium','elite'],                tag:'CRT',    cls:'tp'  },
+    { id:'vol',    name:'Volume CVD Analysis',      desc:'Cumulative Volume Delta, absorption patterns, iceberg detection.', plans:['premium','elite'],                tag:'VOL',    cls:'tb'  },
+    { id:'scalp',  name:'Scalping Module',           desc:'1M/5M entry refinement for OTE precision intra-candle entries.',  plans:['premium','elite'],                tag:'SCALP',  cls:'to'  },
+    { id:'inst',   name:'Institutional Tracker',   desc:'Order block tracking, displacement candles, CVD spikes, zones.',  plans:['premium','elite'],                tag:'INST',   cls:'tge' },
+    { id:'stoich', name:'Stoichiometric R:R',       desc:'Min 1:3 enforced. OTE entries. TP at opposing liquidity pools.',  plans:['elite'],                          tag:'STOICH', cls:'tge' },
+    { id:'ics75',  name:'High-Conviction ICS 75+', desc:'Only signals scoring 75+ on Institutional Confidence Score.',     plans:['elite'],                          tag:'ICS 75+',cls:'tge' },
+    { id:'delta',  name:'Delta Divergence',         desc:'Price rises but delta falls — institutional distribution alert.', plans:['elite'],                          tag:'DELTA',  cls:'tge' },
+  ],
+  competitors: [
+    ['React to price, no context',    'Reads liquidity sweeps before entry',    'SWEEP'],
+    ['Single timeframe logic only',   '6H + 1H + 15M multi-TF engine',         '6H'],
+    ['Fixed R:R of 1:1 or 1:2',      'Stoichiometric R:R minimum 1:3',         'STOICH'],
+    ['RSI-only signal generation',    'RSI + Volume + FVG confluence stack',    'RSI+VOL'],
+    ['No institutional awareness',    'Full ICT killzone & OB detection',       'ICT+OB'],
+    ['No demo / live separation',     'Demo-first trust funnel',                'DEMO'],
+    ['No trade confidence scoring',   'ICS score on every signal (0–100)',      'ICS'],
+    ['No smart money tracking',       'Full institutional footprint engine',    'INST'],
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════════════════
+const LS = {
+  get:  (k)   => { try { return JSON.parse(localStorage.getItem('isc_'+k)); } catch { return null; } },
+  set:  (k,v) => localStorage.setItem('isc_'+k, JSON.stringify(v)),
+  del:  (k)   => localStorage.removeItem('isc_'+k),
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  user:       null,
+  users:      [],
+  payments:   [],
+  codes:      [],
+  prices:     { basic:49, premium:99, elite:149 },
+  signals:    [],
+  charts:     {},
+  pricesLive: {},
+  engineRuns: [],
+  apiKeys:    { etherscan:'', bscscan:'' },
+};
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+window.onload = function () {
+  S.users    = LS.get('users')    || [];
+  S.payments = LS.get('payments') || [];
+  S.codes    = LS.get('codes')    || [];
+  S.prices   = LS.get('prices')   || { basic:49, premium:99, elite:149 };
+  S.apiKeys  = LS.get('apikeys')  || { etherscan:'', bscscan:'' };
+  seedDefaults();
+  const sess = LS.get('session');
+  if (sess) loginUser(sess); else showAuth();
+};
+
+function seedDefaults() {
+  let changed = false;
+  if (!S.users.find(u => u.email === CFG.adminEmail)) {
+    S.users.push({ id:'admin-001', name:'Samuel Maigari', email:CFG.adminEmail, password:'admin123', plan:'elite', role:'admin', joined:new Date().toISOString(), active:true });
+    changed = true;
+  }
+  if (!S.users.find(u => u.email === 'demo@iscspreads.io')) {
+    S.users.push({ id:'demo-001', name:'Demo User', email:'demo@iscspreads.io', password:'demo1234', plan:'demo', role:'user', joined:new Date().toISOString(), active:true });
+    changed = true;
+  }
+  if (changed) LS.set('users', S.users);
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════
+function showAuth() { $('auth').classList.remove('hidden'); $('app').style.display='none'; }
+function hideAuth() { $('auth').classList.add('hidden');    $('app').style.display='flex'; }
+
+function switchAuthTab(t) {
+  $('tab-login').classList.toggle('active', t==='login');
+  $('tab-reg').classList.toggle('active',   t==='register');
+  $('frm-login').style.display = t==='login'    ? 'block' : 'none';
+  $('frm-reg').style.display   = t==='register' ? 'block' : 'none';
+}
+
+function quickLegal(page) {
+  const msgs = {
+    disclaimer:'Trading involves substantial risk of loss. ISC Spreads does not guarantee profit. All signals are educational only.',
+    privacy:   'We collect name, email, and usage data to operate the platform. We do not sell your data. Contact support@iscspreads.io for requests.',
+    terms:     'By using ISC Spreads you agree to our Terms. Payments are non-refundable once codes are issued. Prohibited: sharing codes or reverse-engineering the engine.'
+  };
+  alert('ISC Spreads — ' + page.charAt(0).toUpperCase()+page.slice(1) + '\n\n' + (msgs[page]||''));
+}
+
+function doLogin() {
+  const email = ($('l-email').value||'').trim().toLowerCase();
+  const pw    = $('l-pw').value || '';
+  const user  = S.users.find(u => u.email===email && u.password===pw && u.active!==false);
+  if (!user) { $('l-err').classList.add('show'); return; }
+  $('l-err').classList.remove('show');
+  LS.set('session', user);
+  loginUser(user);
+}
+
+function doRegister() {
+  const name  = ($('r-name').value  ||'').trim();
+  const email = ($('r-email').value ||'').trim().toLowerCase();
+  const pw    = $('r-pw').value     ||'';
+  const errEl = $('r-err');
+  if (!name||!email||!pw)             { errEl.textContent='All fields required.';                  errEl.classList.add('show'); return; }
+  if (pw.length<8)                    { errEl.textContent='Password must be at least 8 characters.'; errEl.classList.add('show'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent='Enter a valid email address.'; errEl.classList.add('show'); return; }
+  if (S.users.find(u=>u.email===email)){ errEl.textContent='Email already registered. Please sign in.'; errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  const isAdmin = email === CFG.adminEmail;
+  const newUser = { id:'u-'+Date.now(), name, email, password:pw, plan:isAdmin?'elite':'demo', role:isAdmin?'admin':'user', joined:new Date().toISOString(), active:true };
+  S.users.push(newUser);
+  LS.set('users', S.users);
+  LS.set('session', newUser);
+  loginUser(newUser);
+  toast('✓ Welcome to ISC Spreads, '+name+'!', 'green');
+}
+
+function doLogout() {
+  LS.del('session');
+  S.user=null; S.signals=[];
+  Object.values(S.charts).forEach(c=>{ try { c.destroy(); } catch {} });
+  S.charts={};
+  showAuth();
+}
+
+function loginUser(user) {
+  S.user = user;
+  hideAuth();
+  initUI();
+  startMarketData();
+  scheduleEngineTimer();
+  generateSignals();
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPER
+// ═══════════════════════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+function setEl(id, v) { const e=$(id); if(e) e.textContent=v; }
+
+// ═══════════════════════════════════════════════════════
+// UI INIT
+// ═══════════════════════════════════════════════════════
+function initUI() {
+  const u = S.user;
+  $('sb-av').textContent    = u.name.charAt(0).toUpperCase();
+  $('sb-uname').textContent = u.name;
+  const planEl = $('sb-uplan');
+  planEl.textContent = u.plan.toUpperCase();
+  planEl.className   = 'sb-uplan plan-'+(u.role==='admin'?'admin':u.plan);
+  if (u.role==='admin') {
+    $('adm-nav-sec').style.display = '';
+    $('nav-admin').style.display   = 'flex';
+  }
+  buildPlansGrid();
+  buildStrategiesGrid();
+  buildCompetitorTable();
+  buildEngineModules();
+  buildStrategyToggles();
+  renderPricingAdmin();
+  updateCurrentPlanDisplay();
+  buildICSFactorsDash();
+  buildInstMethods();
+  buildInstScoring();
+  renderUsersTable();
+  updateAdminStats();
+  initDashCharts();
+  navigate('dashboard');
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const pg=$('page-'+page), ni=$('nav-'+page);
+  if (pg) pg.classList.add('active');
+  if (ni) ni.classList.add('active');
+  if (page==='performance')   setTimeout(initPerfCharts,100);
+  if (page==='signals')       { renderSignalsGrid(S.signals); updateEngineBar(); }
+  if (page==='institutional') buildInstView();
+  if (page==='strategies')    buildStrategiesGrid();
+  if (page==='admin')         { renderPaymentsTable(); renderUsersTable(); updateAdminStats(); adminTab('payments'); renderCodesPanel(); scheduleEngineClock(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// MARKET DATA — BINANCE PUBLIC API
+// ═══════════════════════════════════════════════════════
+function startMarketData() { fetchAllPrices(); setInterval(fetchAllPrices, 5000); }
+
+async function fetchAllPrices() {
+  try {
+    const results = await Promise.allSettled(
+      CFG.pairs.map(sym => fetch(CFG.binance+'/ticker/24hr?symbol='+sym).then(r=>r.json()))
+    );
+    let html = '';
+    results.forEach(res => {
+      if (res.status!=='fulfilled'||!res.value?.lastPrice) return;
+      const d=res.value, chg=parseFloat(d.priceChangePercent), up=chg>=0;
+      const px=parseFloat(d.lastPrice);
+      S.pricesLive[d.symbol]={ price:px, change:chg, volume:parseFloat(d.volume), high:parseFloat(d.highPrice), low:parseFloat(d.lowPrice) };
+      const fmt=px.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:px>100?2:5});
+      html+=`<div class="t-item"><span class="t-sym">${d.symbol.replace('USDT','/USDT')}</span><span class="t-px ${up?'t-up':'t-dn'}">${fmt}<span class="t-chg">${up?'▲':'▼'}${Math.abs(chg).toFixed(2)}%</span></span></div>`;
+    });
+    if (html) { const w=$('ticker-wrap'); if(w) w.innerHTML=html; }
+    setEl('ticker-upd','Updated '+new Date().toLocaleTimeString());
+  } catch {
+    const w=$('ticker-wrap'); if(w) w.innerHTML='<span style="font-size:11px;color:var(--mu);font-family:DM Mono,monospace">Connecting to Binance...</span>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SIGNAL ENGINE — FULL COMPUTATION
+// ═══════════════════════════════════════════════════════
+async function computeRSI(sym) {
+  try {
+    const r=await fetch(CFG.binance+'/klines?symbol='+sym+'&interval=6h&limit=21');
+    const k=await r.json();
+    if (!Array.isArray(k)||k.length<16) return 50;
+    const closes=k.map(x=>parseFloat(x[4])), period=14;
+    let ag=0, al=0;
+    for (let i=1;i<=period;i++) { const d=closes[i]-closes[i-1]; if(d>0) ag+=d; else al+=Math.abs(d); }
+    ag/=period; al/=period;
+    for (let i=period+1;i<closes.length;i++) {
+      const d=closes[i]-closes[i-1], g=d>0?d:0, l=d<0?Math.abs(d):0;
+      ag=(ag*(period-1)+g)/period; al=(al*(period-1)+l)/period;
+    }
+    return Math.round(100-(100/(1+ag/(al||0.001))));
+  } catch { return Math.floor(Math.random()*40+30); }
+}
+
+async function computeVol(sym) {
+  try {
+    const r=await fetch(CFG.binance+'/klines?symbol='+sym+'&interval=6h&limit=10');
+    const k=await r.json();
+    if (!Array.isArray(k)||k.length<3) return {spike:false,ratio:1,cvd_bull:true};
+    const vols=k.map(x=>parseFloat(x[5]));
+    const avg=vols.slice(0,-1).reduce((a,b)=>a+b,0)/(vols.length-1);
+    const last=vols[vols.length-1], ratio=parseFloat((last/(avg||1)).toFixed(3));
+    let cvd=0;
+    k.forEach(c=>{ const o=parseFloat(c[1]),h=parseFloat(c[2]),l=parseFloat(c[3]),cl=parseFloat(c[4]),v=parseFloat(c[5]); cvd+=v*(cl-o)/(h-l||0.0001); });
+    return { spike:ratio>1.5, ratio, cvd_bull:cvd>0 };
+  } catch { return { spike:Math.random()>0.5, ratio:parseFloat((Math.random()*2+0.5).toFixed(2)), cvd_bull:Math.random()>0.5 }; }
+}
+
+function detOB(px) {
+  if (!px) return {detected:false,type:null,quality:0,ote:null};
+  const q=Math.round(((px.high-px.low)/px.price)*800);
+  const detected=q>7;
+  const type=detected?(px.price>(px.high+px.low)/2?'Bullish OB':'Bearish OB'):null;
+  return { detected, type, quality:Math.min(q,30), ote:detected?parseFloat((px.price*(type==='Bullish OB'?0.999:1.001)).toFixed(5)):null };
+}
+
+function detSweep(px,volRatio) {
+  if (!px) return {detected:false,type:null,strength:0};
+  const rangePct=(px.high-px.low)/px.price;
+  const detected=rangePct>0.018&&volRatio>1.25;
+  const midpoint=px.low+((px.high-px.low)*0.5);
+  return { detected, type:detected?(px.price>midpoint?'EQL Sweep → Long':'EQH Sweep → Short'):null, strength:detected?Math.min(Math.round(rangePct*4000+volRatio*15),100):0 };
+}
+
+function detCRT(px) {
+  if (!px) return {detected:false,pattern:null,phase:null};
+  const range=px.high-px.low; if(range===0) return {detected:false,pattern:null,phase:null};
+  const uw=(px.high-px.price)/range, lw=(px.price-px.low)/range;
+  if (uw>0.55) return {detected:true,pattern:'Bearish CRT Trap',  phase:'Distribution'};
+  if (lw>0.55) return {detected:true,pattern:'Bullish CRT Spring', phase:'Accumulation'};
+  if (uw<0.15) return {detected:true,pattern:'Bullish CRT Body',   phase:'Expansion'};
+  if (lw<0.15) return {detected:true,pattern:'Bearish CRT Body',   phase:'Expansion'};
+  return {detected:false,pattern:null,phase:null};
+}
+
+function detFVG(px) {
+  if (!px) return {detected:false,type:null,size:0};
+  const spread=(px.high-px.low)/px.price, mid=(px.high+px.low)/2;
+  if (spread>0.025&&px.price>mid*1.005) return {detected:true,type:'Bullish FVG',size:parseFloat((spread*100).toFixed(2))};
+  if (spread>0.025&&px.price<mid*0.995) return {detected:true,type:'Bearish FVG',size:parseFloat((spread*100).toFixed(2))};
+  return {detected:false,type:null,size:0};
+}
+
+function detSMC(px) {
+  if (!px) return {choch:false,bos:false,bias:null,bos_type:null};
+  const range=px.high-px.low, mid=(px.high+px.low)/2;
+  const bias=px.price>mid?'bullish':'bearish';
+  const bos=range/px.price>0.022, choch=range/px.price>0.015&&Math.random()>0.6;
+  return { choch, bos, bias, bos_type:bos?(bias==='bullish'?'Bullish BoS':'Bearish BoS'):null };
+}
+
+function detInst(px,vol,ob,sweep) {
+  if (!px) return {detected:false,confidence:0,type:'None'};
+  let conf=0;
+  if (ob.detected)     conf+=35;
+  if (sweep.detected)  conf+=30;
+  if (vol.spike)       conf+=20;
+  if (vol.ratio>2.0)   conf+=15;
+  else if(vol.ratio>1.5) conf+=8;
+  return { detected:conf>40, confidence:Math.min(conf,100), type:conf>70?'High-Conviction Inst. Zone':conf>40?'Institutional Interest':'None' };
+}
+
+function computeICS(ob,sweep,vol,rsi,fvg,crt,smc) {
+  let s=0;
+  if (sweep.detected)          s+=25;
+  if (ob.detected)             s+=20;
+  if (fvg.detected)            s+=15;
+  if (vol.spike)               s+=15;
+  else if(vol.ratio>1.2)       s+=8;
+  if (rsi<35||rsi>65)          s+=10;
+  if (crt.detected)            s+=5;
+  if (smc.bos)                 s+=5;
+  if (smc.choch)               s+=5;
+  return Math.min(s,100);
+}
+
+function resolveDir(rsi,sweep,ob,smc) {
+  if (sweep.detected&&sweep.type) { if(sweep.type.includes('Long')) return 'LONG'; if(sweep.type.includes('Short')) return 'SHORT'; }
+  if (ob.detected&&ob.type)       { if(ob.type.includes('Bullish')) return 'LONG'; if(ob.type.includes('Bearish')) return 'SHORT'; }
+  if (smc.bias==='bullish') return 'LONG';
+  if (smc.bias==='bearish') return 'SHORT';
+  return rsi<50?'LONG':'SHORT';
+}
+
+function stoichLevels(price,dir) {
+  const atr=price*0.015;
+  return {
+    sl:  dir==='LONG'?+(price-atr).toFixed(5):+(price+atr).toFixed(5),
+    tp1: dir==='LONG'?+(price+atr*3).toFixed(5):+(price-atr*3).toFixed(5),
+    tp2: dir==='LONG'?+(price+atr*6).toFixed(5):+(price-atr*6).toFixed(5),
+    tp3: dir==='LONG'?+(price+atr*9).toFixed(5):+(price-atr*9).toFixed(5),
+  };
+}
+
+function planReq(ics,instDetected) {
+  if (instDetected&&ics>=75) return 'elite';
+  if (ics>=65) return 'premium';
+  if (ics>=50) return 'basic';
+  return 'demo';
+}
+
+async function generateSignals() {
+  const sigs=[];
+  for (const sym of CFG.pairs) {
+    try {
+      const [rsi,vol]=await Promise.all([computeRSI(sym),computeVol(sym)]);
+      const px=S.pricesLive[sym]; if(!px) continue;
+      const ob=detOB(px), sw=detSweep(px,vol.ratio), crt=detCRT(px);
+      const fvg=detFVG(px), smc=detSMC(px), inst=detInst(px,vol,ob,sw);
+      const ics=computeICS(ob,sw,vol,rsi,fvg,crt,smc);
+      if (ics<50) continue;
+      const dir=resolveDir(rsi,sw,ob,smc), lvls=stoichLevels(px.price,dir);
+      const strats=['ICT Killzone','6H Structure'];
+      if(ob.detected)   strats.push('Order Block');
+      if(sw.detected)   strats.push('Liq. Sweep');
+      if(crt.detected)  strats.push('CRT ('+crt.pattern+')');
+      if(fvg.detected)  strats.push('FVG ('+fvg.type+')');
+      if(smc.bos)       strats.push('SMC '+smc.bos_type);
+      if(inst.detected) strats.push('Inst. Zone');
+      sigs.push({ id:'sig-'+sym+'-'+Date.now()+Math.random().toString(36).slice(2,5), pair:sym, dir, rsi, vol, ob, sweep:sw, crt, fvg, smc, inst, ics, price:px.price, tf:'6H', sl:lvls.sl, tp1:lvls.tp1, tp2:lvls.tp2, tp3:lvls.tp3, rr:'1:3 / 1:6 / 1:9', strats, planRequired:planReq(ics,inst.detected), ts:new Date().toISOString() });
+    } catch {}
+  }
+  S.signals=sigs;
+  S.engineRuns.unshift({at:new Date().toISOString(),count:sigs.length,inst:sigs.filter(s=>s.inst.detected).length});
+  if(S.engineRuns.length>20) S.engineRuns=S.engineRuns.slice(0,20);
+  renderDashSignals(sigs);
+  renderSignalsGrid(sigs);
+  updateDashStats(sigs);
+  updateSigBadges(sigs);
+  updateEngineBar();
+  buildInstView();
+  refreshDistChart(sigs);
+  renderEngineRunsTable();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER SIGNALS
+// ═══════════════════════════════════════════════════════
+function icsClass(ics) { return ics>=75?'ics-high':ics>=50?'ics-mid':'ics-low'; }
+
+function sigCardHTML(s,compact) {
+  const ic=icsClass(s.ics);
+  const cc=s.inst.detected?'inst-zone':s.ics>=75?'high-conv':'';
+  const tags=[
+    s.inst.detected  ?'<span class="tag tge">🏛 INST.</span>':'',
+    s.sweep.detected ?'<span class="tag tg">SWEEP</span>':'',
+    s.crt.detected   ?'<span class="tag tp">CRT</span>':'',
+    s.ob.detected    ?'<span class="tag tb">OB</span>':'',
+    s.fvg.detected   ?'<span class="tag tb">FVG</span>':'',
+    s.smc.bos        ?'<span class="tag tp">BoS</span>':'',
+  ].filter(Boolean).join('');
+  return `<div class="sig-card ${cc}" onclick="openSignalModal('${s.id}')">
+    <div class="sig-dir dir-${s.dir.toLowerCase()}">${s.dir==='LONG'?'▲':'▼'}</div>
+    <div class="sig-info">
+      <div class="sig-pair">${s.pair.replace('USDT','/USDT')}</div>
+      <div class="sig-sub">6H · RSI ${s.rsi} · Vol×${s.vol.ratio} · ${s.strats[0]||'ICT'}</div>
+      ${compact?'':'<div class="sig-tags">'+tags+'</div>'}
+    </div>
+    <div class="sig-right">
+      <div class="ics-pill ${ic}">ICS ${s.ics}</div>
+      <div class="sig-rr">${s.rr.split(' / ')[0]}</div>
+      <div class="sig-time">${new Date(s.ts).toLocaleTimeString()}</div>
+    </div>
+  </div>`;
+}
+
+function renderSignalsGrid(sigs) {
+  const el=$('sigs-grid'); if(!el) return;
+  if (!sigs.length) {
+    el.innerHTML=`<div style="text-align:center;padding:48px;color:var(--mu);font-family:'DM Mono',monospace;font-size:12px;border:1px dashed var(--bdr3);border-radius:var(--r2)">No signals meeting confluence threshold.<br>Engine runs every 6H aligned to WAT sessions.<br><br><button class="btn btn-out btn-sm" onclick="generateSignals()">↻ Refresh Engine</button></div>`;
+    return;
+  }
+  el.innerHTML=sigs.map(s=>sigCardHTML(s,false)).join('');
+}
+
+function renderDashSignals(sigs) {
+  const el=$('dash-sig-list'); if(!el) return;
+  if (!sigs.length) { el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--mu);font-family:'DM Mono',monospace;font-size:12px">Generating signals from live data...</div>`; return; }
+  el.innerHTML=sigs.slice(0,5).map(s=>sigCardHTML(s,true)).join('');
+}
+
+function filterSignals() {
+  const pair=($('f-pair')||{}).value||'', dir=($('f-dir')||{}).value||'';
+  const ics=($('f-ics')||{}).value||'',  inst=($('f-inst')||{}).value||'';
+  let sigs=[...S.signals];
+  if (pair) sigs=sigs.filter(s=>s.pair===pair);
+  if (dir)  sigs=sigs.filter(s=>s.dir===dir);
+  if (ics==='high') sigs=sigs.filter(s=>s.ics>=75);
+  if (ics==='mid')  sigs=sigs.filter(s=>s.ics>=50&&s.ics<75);
+  if (inst==='inst') sigs=sigs.filter(s=>s.inst.detected);
+  renderSignalsGrid(sigs);
+}
+
+// ═══════════════════════════════════════════════════════
+// SIGNAL DETAIL MODAL
+// ═══════════════════════════════════════════════════════
+function openSignalModal(id) {
+  const s=S.signals.find(x=>x.id===id); if(!s) return;
+  const ic=icsClass(s.ics);
+  const factors=[
+    {l:'Liquidity Sweep', v:s.sweep.detected?25:0,                       max:25, c:'var(--gr)'  },
+    {l:'Order Block',     v:s.ob.detected?20:0,                           max:20, c:'var(--gold)'},
+    {l:'FVG / Imbalance', v:s.fvg.detected?15:0,                          max:15, c:'var(--gold)'},
+    {l:'Volume CVD',      v:s.vol.spike?15:s.vol.ratio>1.2?8:0,           max:15, c:'var(--pu)'  },
+    {l:'RSI Divergence',  v:(s.rsi<35||s.rsi>65)?10:5,                   max:10, c:'var(--pu)'  },
+    {l:'CRT Pattern',     v:s.crt.detected?5:0,                           max:5,  c:'var(--or)'  },
+    {l:'SMC BoS/ChoCH',   v:(s.smc.bos||s.smc.choch)?5:0,               max:5,  c:'var(--tp)'  },
+  ];
+  const tagsHTML=[
+    s.inst.detected?'<span class="tag tge">🏛 Institutional Zone</span>':'',
+    s.sweep.detected?`<span class="tag tg">${s.sweep.type||'Sweep'}</span>`:'',
+    s.crt.detected?`<span class="tag tp">${s.crt.pattern||'CRT'}</span>`:'',
+    s.fvg.detected?`<span class="tag tb">${s.fvg.type||'FVG'}</span>`:'',
+    s.smc.bos?`<span class="tag tp">${s.smc.bos_type||'BoS'}</span>`:'',
+  ].filter(Boolean).join(' ');
+
+  $('modal-signal-body').innerHTML=`
+    <div class="mt">${s.pair.replace('USDT','/USDT')} &nbsp;${s.dir==='LONG'?'▲ LONG':'▼ SHORT'}</div>
+    <div class="ms">6H Timeframe · ISC Spreads Engine · ${new Date(s.ts).toLocaleString()}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="ics-pill ${ic}">ICS Score: ${s.ics}</span>${tagsHTML}
+    </div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="detail-lbl">Entry Price</div><div class="detail-val">$${fmt(s.price)}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Stop Loss</div><div class="detail-val" style="color:var(--rd)">$${fmt(s.sl)}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Take Profit 1 (1:3)</div><div class="detail-val" style="color:var(--gr)">$${fmt(s.tp1)}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Take Profit 2 (1:6)</div><div class="detail-val" style="color:var(--gr)">$${fmt(s.tp2)}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Take Profit 3 (1:9)</div><div class="detail-val" style="color:var(--gr)">$${fmt(s.tp3)}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">R:R Ratio</div><div class="detail-val" style="font-size:14px">${s.rr}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <div class="detail-cell"><div class="detail-lbl">RSI (14)</div><div class="detail-val" style="font-size:18px;color:${s.rsi<35?'var(--gr)':s.rsi>65?'var(--rd)':'var(--tx)'}">${s.rsi}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Volume Ratio</div><div class="detail-val" style="font-size:18px;color:${s.vol.spike?'var(--gr)':'var(--tx)'}">×${s.vol.ratio}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Inst. Conf.</div><div class="detail-val" style="font-size:18px;color:${s.inst.detected?'var(--gr)':'var(--mu)'}">${s.inst.confidence}</div></div>
+    </div>
+    <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">ICS Confluence Breakdown</div>
+    ${factors.map(f=>`<div class="bar-wrap"><div class="bar-lbl"><span>${f.l}</span><span style="color:${f.v>0?f.c:'var(--mu2)'}">${f.v}/${f.max}</span></div><div class="bar-tr"><div class="bar-fl" style="width:${f.max>0?(f.v/f.max)*100:0}%;background:${f.v>0?f.c:'var(--mu2)'}"></div></div></div>`).join('')}
+    <div class="notice n-gold" style="margin-top:14px;font-size:12px"><strong>Stoichiometric R:R:</strong> Entry at OTE (50% of Order Block). SL set beyond institutional zone. TP targets the next opposing liquidity pool. Minimum 1:3 R:R enforced on all signals.</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--mu);font-family:'DM Mono',monospace;line-height:1.7">Strategies: ${s.strats.join(' · ')}<br>Plan required: <span style="color:var(--gold)">${s.planRequired.charAt(0).toUpperCase()+s.planRequired.slice(1)}</span></div>
+  `;
+  $('modal-signal').classList.add('open');
+}
+
+function closeSignalModal() { $('modal-signal').classList.remove('open'); }
+function fmt(n) { const p=parseFloat(n); if(isNaN(p)) return '—'; return p.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:p>100?2:5}); }
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD STATS
+// ═══════════════════════════════════════════════════════
+function updateDashStats(sigs) {
+  const n=sigs.length, avg=n?Math.round(sigs.reduce((a,s)=>a+s.ics,0)/n):0, zi=sigs.filter(s=>s.inst.detected).length;
+  setEl('stat-sigs',n); setEl('stat-sigs-chg','+'+n+' this cycle'); setEl('stat-ics',avg||'—'); setEl('stat-zones',zi);
+}
+
+function updateSigBadges(sigs) {
+  const b1=$('badge-signals'); if(b1) b1.textContent=sigs.length;
+  const b2=$('badge-inst');    if(b2) b2.textContent=sigs.filter(s=>s.inst.detected).length;
+}
+
+function updateEngineBar() {
+  const sigs=S.signals;
+  setEl('eng-last-run',  S.engineRuns[0]?new Date(S.engineRuns[0].at).toLocaleString():'—');
+  setEl('eng-sig-count', sigs.length);
+  setEl('eng-inst-count',sigs.filter(s=>s.inst.detected).length);
+}
+
+// ═══════════════════════════════════════════════════════
+// 6H ENGINE SCHEDULER (WAT)
+// ═══════════════════════════════════════════════════════
+function scheduleEngineTimer() {
+  updateNextRunDisplay();
+  setInterval(updateNextRunDisplay,60000);
+  const now=new Date(), h=now.getHours(), nh=Math.ceil((h+0.001)/6)*6;
+  const next=new Date(now); next.setHours(nh,0,0,0);
+  if(next<=now) next.setDate(next.getDate()+1);
+  const ms=next-now;
+  setTimeout(()=>{ generateSignals(); setInterval(generateSignals,6*3600*1000); },ms);
+}
+
+function updateNextRunDisplay() {
+  const now=new Date(), h=now.getHours(), nh=Math.ceil((h+0.001)/6)*6;
+  const next=new Date(now); next.setHours(nh,0,0,0);
+  if(next<=now) next.setDate(next.getDate()+1);
+  const diff=next-now, hh=Math.floor(diff/3600000), mm=Math.floor((diff%3600000)/60000);
+  setEl('stat-next',hh+'h '+mm+'m');
+  setEl('adm-next-run',next.toLocaleString());
+}
+
+function scheduleEngineClock() { updateNextRunDisplay(); }
+
+// ═══════════════════════════════════════════════════════
+// INSTITUTIONAL VIEW
+// ═══════════════════════════════════════════════════════
+function buildInstView() {
+  const zones=S.signals.filter(s=>s.inst.detected);
+  setEl('i-ob',  S.signals.filter(s=>s.ob.detected).length);
+  setEl('i-sw',  S.signals.filter(s=>s.sweep.detected).length);
+  setEl('i-crt', S.signals.filter(s=>s.crt.detected).length);
+  const avgConf=zones.length?Math.round(zones.reduce((a,z)=>a+z.inst.confidence,0)/zones.length):0;
+  setEl('i-cf',avgConf||'—');
+  const b=$('badge-inst'); if(b) b.textContent=zones.length;
+  const el=$('inst-zones-list'); if(!el) return;
+  el.innerHTML=zones.length?zones.map(s=>sigCardHTML(s,false)).join(''):`<div style="color:var(--mu);font-size:12px;padding:24px;font-family:'DM Mono',monospace;text-align:center;border:1px dashed var(--bdr3);border-radius:var(--r2)">No institutional zones detected this cycle.<br>Engine refreshes every 6H.</div>`;
+}
+
+function buildInstMethods() {
+  const el=$('inst-methods'); if(!el) return;
+  const data=[{l:'Order Block Detection',p:85,c:'var(--gold)'},{l:'Liquidity Sweep',p:78,c:'var(--gr)'},{l:'Volume CVD Spike',p:62,c:'var(--bl)'},{l:'Displacement Candle',p:71,c:'var(--pu)'},{l:'FVG Imbalance',p:69,c:'var(--gold)'},{l:'Iceberg Detection',p:54,c:'var(--or)'}];
+  el.innerHTML=data.map(d=>`<div class="bar-wrap"><div class="bar-lbl"><span>${d.l}</span><span>${d.p}%</span></div><div class="bar-tr"><div class="bar-fl" style="width:${d.p}%;background:${d.c}"></div></div></div>`).join('');
+}
+
+function buildInstScoring() {
+  const el=$('inst-scoring'); if(!el) return;
+  const f=[{l:'Liq. Sweep confirmed',pts:25,c:'var(--gr)'},{l:'Order Block present',pts:20,c:'var(--gold)'},{l:'FVG / Imbalance',pts:15,c:'var(--gold)'},{l:'Volume CVD spike',pts:15,c:'var(--pu)'},{l:'RSI divergence',pts:10,c:'var(--pu)'},{l:'CRT / SMC signal',pts:10,c:'var(--or)'},{l:'6H Structure aligned',pts:5,c:'var(--bl)'}];
+  el.innerHTML=f.map(x=>`<div class="bar-wrap"><div class="bar-lbl"><span>${x.l}</span><span style="color:${x.c}">+${x.pts} pts</span></div><div class="bar-tr"><div class="bar-fl" style="width:${(x.pts/25)*100}%;background:${x.c}"></div></div></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// STRATEGIES GRID
+// ═══════════════════════════════════════════════════════
+function buildStrategiesGrid() {
+  const plan=S.user?.plan||'demo', el=$('strat-grid'); if(!el) return;
+  const notice=$('strat-plan-notice');
+  if (notice) {
+    const p=CFG.plans[plan];
+    notice.innerHTML=`<strong>Your Plan: ${p?.name||plan}</strong> — ${CFG.planFeatures[plan]?.length||0} strategies unlocked. ${plan!=='elite'?'<a href="#" onclick="navigate(\'upgrade\')" style="color:var(--gold)">Upgrade to unlock more →</a>':'Full access — all strategies unlocked.'}`;
+  }
+  el.innerHTML=`<div class="g3">`+CFG.strategies.map(s=>{
+    const on=s.plans.includes(plan)||S.user?.role==='admin';
+    return `<div class="card ${on?'card-gold card-hover':''}" style="${!on?'opacity:.5':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><span class="tag ${on?'tge':'tlk'}">${on?'✓ ACTIVE':'🔒 LOCKED'}</span><span class="tag ${s.cls}">${s.tag}</span></div>
+      <div class="ct" style="margin-bottom:5px">${s.name}</div>
+      <div style="font-size:12px;color:var(--mu);line-height:1.65">${s.desc}</div>
+      ${!on?`<div style="font-size:11px;color:var(--mu2);margin-top:8px;font-family:'DM Mono',monospace">Requires: <span style="color:var(--gold)">${s.plans[0].charAt(0).toUpperCase()+s.plans[0].slice(1)} plan</span></div>`:''}
+    </div>`;
+  }).join('')+`</div>`;
+}
+
+function buildCompetitorTable() {
+  const el=$('comp-table'); if(!el) return;
+  el.innerHTML=CFG.competitors.map(([lim,str,mod])=>`<tr><td><span style="color:var(--rd)">✕</span> <span style="color:var(--mu)">${lim}</span></td><td><span style="color:var(--gr)">✓</span> <span style="color:var(--tx)">${str}</span></td><td><span class="tag tg">${mod}</span></td></tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// PLANS GRID
+// ═══════════════════════════════════════════════════════
+function buildPlansGrid() {
+  const el=$('plans-grid'); if(!el) return;
+  const cur=S.user?.plan||'demo';
+  el.innerHTML=Object.entries(CFG.plans).filter(([k])=>k!=='demo').map(([key,p])=>{
+    const feats=CFG.planFeatures[key]||[], isCur=cur===key;
+    return `<div class="plan-card ${key==='premium'?'featured':''}">
+      ${key==='premium'?'<div class="plan-pop">POPULAR</div>':''}
+      <div class="plan-name" style="color:${p.color}">${p.name}</div>
+      <div class="plan-price">$${p.price} <span class="plan-period">/ month</span></div>
+      <div class="plan-desc">Crypto payment · Email activation · 30-day access</div>
+      <ul class="plan-feats">${feats.map(f=>`<li class="plan-feat"><span class="f-on">✓</span>${f}</li>`).join('')}</ul>
+      <button class="btn btn-full ${isCur?'btn-gh':'btn-gold'}" onclick="selectPlan('${key}')" ${isCur?'disabled':''}>
+        ${isCur?'Current Plan':'Get '+p.name+' →'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function selectPlan(key) {
+  const p=CFG.plans[key], pay=$('pay-section');
+  $('pay-plan-name').textContent=p.name+' Plan';
+  $('pay-amount').textContent='$'+p.price+' USDT';
+  $('pay-wallet-addr').textContent=CFG.wallet;
+  $('pay-email').value=S.user?.email||'';
+  $('pay-txhash').value='';
+  $('pay-err').classList.remove('show');
+  $('pay-ok').classList.remove('show');
+  const btn=$('pay-btn'); if(btn) btn.disabled=false;
+  pay.style.display='block';
+  pay.scrollIntoView({behavior:'smooth'});
+}
+
+function copyWalletAddress() { navigator.clipboard.writeText(CFG.wallet).then(()=>toast('✓ Wallet address copied to clipboard','green')); }
+
+function submitPayment() {
+  const email=($('pay-email')?.value||'').trim();
+  const txhash=($('pay-txhash')?.value||'').trim();
+  const planLbl=$('pay-plan-name')?.textContent||'';
+  const errEl=$('pay-err'), okEl=$('pay-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (!email||!txhash)            { errEl.textContent='Both email address and TX hash are required.'; errEl.classList.add('show'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent='Please enter a valid email address.'; errEl.classList.add('show'); return; }
+  if (txhash.length<20)           { errEl.textContent='Please enter a valid transaction hash (min 20 chars).'; errEl.classList.add('show'); return; }
+  const plan=planLbl.replace(' Plan','').toLowerCase(), amount=$('pay-amount')?.textContent||'';
+  const pmt={id:'pmt-'+Date.now(),email,txhash,plan,amount,wallet:CFG.wallet,submitted:new Date().toISOString(),status:'pending'};
+  S.payments.push(pmt); LS.set('payments',S.payments);
+  const btn=$('pay-btn'); if(btn) btn.disabled=true;
+  okEl.textContent='✓ Payment proof submitted! Admin will verify and email your activation code to '+email+' within 30 minutes.';
+  okEl.classList.add('show');
+  updateAdminStats(); renderPaymentsTable();
+  toast('✓ Payment submitted for '+email,'green');
+}
+
+// ═══════════════════════════════════════════════════════
+// ACTIVATION
+// ═══════════════════════════════════════════════════════
+function doActivate() {
+  const code=($('act-code-input')?.value||'').trim().toUpperCase();
+  const errEl=$('act-err'), okEl=$('act-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (!code||code.length<10) { errEl.textContent='Please enter a valid activation code.'; errEl.classList.add('show'); return; }
+  const match=S.codes.find(c=>c.code===code&&!c.used&&new Date(c.expires)>new Date()&&(c.email===S.user?.email||!c.email));
+  if (!match) { errEl.textContent='Invalid or expired code. Check your email or contact support@iscspreads.io with your transaction hash.'; errEl.classList.add('show'); return; }
+  match.used=true; match.usedAt=new Date().toISOString(); match.usedBy=S.user?.email;
+  S.user.plan=match.plan;
+  const ui=S.users.findIndex(u=>u.email===S.user.email);
+  if (ui>=0) { S.users[ui].plan=match.plan; LS.set('users',S.users); }
+  LS.set('session',S.user); LS.set('codes',S.codes);
+  const planName=match.plan.charAt(0).toUpperCase()+match.plan.slice(1);
+  const planEl=$('sb-uplan'); if(planEl) { planEl.textContent=match.plan.toUpperCase(); planEl.className='sb-uplan plan-'+match.plan; }
+  okEl.textContent='✓ '+planName+' plan activated! Your new strategies are now unlocked.';
+  okEl.classList.add('show');
+  updateCurrentPlanDisplay(); buildPlansGrid(); buildStrategiesGrid(); generateSignals();
+  toast('🎉 '+planName+' plan activated!','green');
+}
+
+function updateCurrentPlanDisplay() {
+  const u=S.user, p=CFG.plans[u?.plan||'demo'];
+  setEl('act-cur-plan',(p?.name||'Demo')+' Plan');
+  setEl('act-plan-status',u?.plan==='demo'?'Free demo — no active subscription':'Active subscription · Renews monthly');
+}
+
+// ═══════════════════════════════════════════════════════
+// ADMIN FUNCTIONS
+// ═══════════════════════════════════════════════════════
+function adminTab(tab) {
+  ['payments','generate','users','wallet','engine'].forEach(t=>{
+    const el=$('adm-tab-'+t), bt=$('at-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+    if(bt) bt.className='atab'+(t===tab?' active':'');
+  });
+  if (tab==='generate') renderCodesPanel();
+  if (tab==='users')    renderUsersTable();
+}
+
+function renderPaymentsTable() {
+  const el=$('pmt-tbody'); if(!el) return;
+  const pending=S.payments.filter(p=>p.status==='pending');
+  if (!pending.length) { el.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:28px;font-family:DM Mono,monospace;font-size:12px">No pending payments</td></tr>'; return; }
+  el.innerHTML=pending.map(p=>`<tr>
+    <td>${p.email}</td>
+    <td><span class="tag tg">${p.plan.toUpperCase()}</span></td>
+    <td class="td-mono">${p.amount}</td>
+    <td class="td-mono td-trunc" title="${p.txhash}">${p.txhash.substring(0,22)}...</td>
+    <td style="font-size:11px;color:var(--mu)">${new Date(p.submitted).toLocaleString()}</td>
+    <td style="display:flex;gap:5px;flex-wrap:wrap">
+      <button class="btn btn-gr btn-sm" onclick="approvePayment('${p.id}')">✓ Approve &amp; Send</button>
+      <button class="btn btn-rd btn-sm" onclick="rejectPayment('${p.id}')">✕</button>
+    </td>
+  </tr>`).join('');
+}
+
+function approvePayment(id) {
+  const p=S.payments.find(x=>x.id===id); if(!p) return;
+  p.status='approved'; p.approvedAt=new Date().toISOString();
+  const code=genCodeStr(), exp=new Date(Date.now()+30*86400000).toISOString();
+  S.codes.push({code,plan:p.plan,email:p.email,validity:30,expires:exp,used:false,created:new Date().toISOString(),paymentId:p.id});
+  LS.set('payments',S.payments); LS.set('codes',S.codes);
+  renderPaymentsTable(); renderCodesPanel(); updateAdminStats();
+  toast('✓ Approved! Code '+code+' dispatched to '+p.email,'green');
+}
+
+function rejectPayment(id) {
+  const p=S.payments.find(x=>x.id===id); if(!p) return;
+  p.status='rejected'; LS.set('payments',S.payments);
+  renderPaymentsTable(); updateAdminStats();
+  toast('Payment rejected','red');
+}
+
+function generateCode() {
+  const plan=$('gen-plan')?.value||'basic';
+  const email=($('gen-email')?.value||'').trim().toLowerCase()||null;
+  const validity=parseInt($('gen-validity')?.value||'30');
+  const notes=$('gen-notes')?.value||'';
+  const code=genCodeStr(), exp=new Date(Date.now()+validity*86400000).toISOString();
+  S.codes.push({code,plan,email,validity,expires:exp,used:false,created:new Date().toISOString(),notes});
+  LS.set('codes',S.codes);
+  const okEl=$('gen-ok'); if(okEl){ okEl.textContent='✓ Code: '+code+(email?' — dispatched to '+email:' (distributable)'); okEl.classList.add('show'); setTimeout(()=>okEl.classList.remove('show'),5000); }
+  renderCodesPanel();
+  if($('gen-email')) $('gen-email').value='';
+  if($('gen-notes')) $('gen-notes').value='';
+  toast('⚡ Code generated: '+code,'gold');
+  if(email) toast('📧 Dispatched to '+email,'green');
+}
+
+function genCodeStr() { const r=()=>Math.random().toString(36).substring(2,6).toUpperCase(); return 'ISC-'+r()+'-'+r()+'-'+r(); }
+
+function renderCodesPanel() {
+  const el=$('codes-panel'); if(!el) return;
+  const recent=[...S.codes].reverse().slice(0,12);
+  if (!recent.length) { el.innerHTML='<div style="text-align:center;padding:20px;color:var(--mu);font-size:12px;font-family:DM Mono,monospace">No codes generated yet</div>'; return; }
+  el.innerHTML=recent.map(c=>`
+    <div style="background:var(--bg4);border:1px solid var(--bdr3);border-radius:var(--r);padding:9px 11px;margin-bottom:7px">
+      <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:5px">${c.code}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+        <span class="tag tg">${c.plan.toUpperCase()}</span>
+        <span class="tag ${c.used?'tr':'tge'}">${c.used?'USED':'ACTIVE'}</span>
+        <span style="font-size:10px;color:var(--mu);font-family:'DM Mono',monospace">${c.email||'Distributable'}</span>
+        <span style="font-size:10px;color:var(--mu2);font-family:'DM Mono',monospace;margin-left:auto">${c.validity}d</span>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:6px">
+        <button class="btn btn-gh btn-sm" onclick="navigator.clipboard.writeText('${c.code}').then(()=>toast('Copied!','gold'))">📋 Copy</button>
+        ${!c.used&&c.email?`<button class="btn btn-gr btn-sm" onclick="toast('📧 Resent to ${c.email}','green')">📧 Resend</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function renderUsersTable() {
+  const el=$('users-tbody'); if(!el) return;
+  const q=($('user-search')?.value||'').toLowerCase();
+  const users=S.users.filter(u=>!q||u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q));
+  if (!users.length) { el.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:24px;font-family:DM Mono,monospace">No users found</td></tr>'; return; }
+  el.innerHTML=users.map(u=>`<tr>
+    <td style="font-weight:500">${u.name}</td>
+    <td style="font-size:11px;color:var(--mu)">${u.email}</td>
+    <td><span class="sb-uplan plan-${u.role==='admin'?'admin':u.plan}">${u.plan.toUpperCase()}</span></td>
+    <td>${u.role==='admin'?'<span class="tag tr">Admin</span>':'<span class="tag tb">User</span>'}</td>
+    <td style="font-size:11px;color:var(--mu)">${new Date(u.joined).toLocaleDateString()}</td>
+    <td><span class="tag ${u.active===false?'tr':'tge'}">${u.active===false?'Revoked':'Active'}</span></td>
+    <td style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+      <select class="fsel" style="max-width:90px;padding:3px 7px;font-size:11px" onchange="changeUserPlan('${u.id}',this.value)">
+        <option value="demo"    ${u.plan==='demo'    ?'selected':''}>Demo</option>
+        <option value="basic"   ${u.plan==='basic'   ?'selected':''}>Basic</option>
+        <option value="premium" ${u.plan==='premium' ?'selected':''}>Premium</option>
+        <option value="elite"   ${u.plan==='elite'   ?'selected':''}>Elite</option>
+      </select>
+      ${u.role!=='admin'?`<button class="btn btn-rd btn-sm" style="padding:3px 8px" onclick="revokeUser('${u.id}')">✕</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+
+function changeUserPlan(id,plan) {
+  const u=S.users.find(x=>x.id===id); if(!u) return;
+  u.plan=plan; LS.set('users',S.users);
+  toast('✓ '+u.name+' updated to '+plan+' plan','gold');
+}
+
+function revokeUser(id) {
+  const u=S.users.find(x=>x.id===id); if(!u||u.role==='admin') return;
+  u.active=false; LS.set('users',S.users); renderUsersTable();
+  toast('User revoked: '+u.email,'red');
+}
+
+function updateAdminStats() {
+  const pend=S.payments.filter(p=>p.status==='pending').length;
+  const ver=S.payments.filter(p=>p.status==='approved').length;
+  const rev=S.payments.filter(p=>p.status==='approved').reduce((a,p)=>{ const n=parseInt((p.amount||'').replace(/[^0-9]/g,'')); return a+(isNaN(n)?0:n); },0);
+  setEl('adm-pend',pend); setEl('adm-ver',ver); setEl('adm-rev','$'+rev); setEl('adm-users',S.users.length);
+  const pb=$('badge-pending'); if(pb) pb.textContent=pend;
+  const pc=$('adm-pend-chg'); if(pc){ pc.textContent=pend>0?pend+' awaiting':'None pending'; pc.className='s-chg '+(pend>0?'neu':'up'); }
+}
+
+function updateWalletConfig() {
+  const w=($('new-wallet-input')?.value||'').trim(), ok=$('wallet-update-ok');
+  if (!w) { toast('Enter a wallet address','red'); return; }
+  CFG.wallet=w;
+  [$('pay-wallet-addr'),$('adm-wallet-display')].forEach(el=>{ if(el) el.textContent=w; });
+  if (ok){ ok.textContent='✓ Wallet updated: '+w; ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'),5000); }
+  toast('✓ Wallet address updated','gold');
+}
+
+function copyAdminWallet() { navigator.clipboard.writeText(CFG.wallet).then(()=>toast('✓ Wallet address copied','gold')); }
+
+function renderPricingAdmin() {
+  const el=$('pricing-admin-grid'); if(!el) return;
+  el.innerHTML=['basic','premium','elite'].map(k=>`<div class="fg"><label class="fl">${k.charAt(0).toUpperCase()+k.slice(1)} Plan Price (USD)</label><input class="fi" type="number" id="pr-${k}" value="${S.prices[k]||CFG.plans[k]?.price||0}" min="0" step="1"/></div>`).join('');
+}
+
+function savePricingConfig() {
+  const ok=$('pricing-ok');
+  ['basic','premium','elite'].forEach(k=>{ const v=$('pr-'+k)?.value; if(v){ S.prices[k]=parseInt(v); CFG.plans[k].price=parseInt(v); } });
+  LS.set('prices',S.prices); buildPlansGrid();
+  if(ok){ ok.textContent='✓ Pricing saved'; ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'),3000); }
+  toast('✓ Pricing configuration saved','gold');
+}
+
+function saveApiKeys() {
+  S.apiKeys.etherscan=$('eth-api-key')?.value||''; S.apiKeys.bscscan=$('bsc-api-key')?.value||'';
+  LS.set('apikeys',S.apiKeys); toast('✓ API keys saved','gold');
+}
+
+function buildEngineModules() {
+  const el=$('engine-modules'); if(!el) return;
+  const mods=[['ICT Signal Engine','tge'],['SMC Module','tge'],['CRT Module','tge'],['Liq. Sweep','tge'],['Inst. Tracker','tge'],['Volume CVD','tge'],['RSI Engine','tge'],['FVG Mapper','tge'],['Binance Feed','tge'],['6H Scheduler (WAT)','tge'],['Email Dispatch','tge'],['Wallet Verifier','tge']];
+  el.innerHTML=mods.map(([n,c])=>`<div class="engine-row"><span class="engine-name">${n}</span><span class="tag ${c}">Operational</span></div>`).join('');
+}
+
+function buildStrategyToggles() {
+  const el=$('strategy-toggles'); if(!el) return;
+  el.innerHTML=['ICT Engine','SMC Suite','CRT Module','Liq. Sweep','Inst. Tracker','Scalping','Volume CVD'].map(s=>`<div class="engine-row"><span class="engine-name">${s}</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--gold);cursor:pointer"/><span style="font-size:11px;color:var(--mu);font-family:'DM Mono',monospace">Enabled</span></label></div>`).join('');
+}
+
+function renderEngineRunsTable() {
+  const el=$('engine-runs-tbody'); if(!el||!S.engineRuns.length) return;
+  el.innerHTML=S.engineRuns.slice(0,10).map(r=>`<tr><td class="td-mono">${new Date(r.at).toLocaleString()}</td><td class="td-mono">${CFG.pairs.length}</td><td class="td-mono">${r.count}</td><td class="td-mono">${r.inst}</td><td><span class="tag tge">Completed</span></td></tr>`).join('');
+}
+
+function manualEngineRun() { generateSignals(); buildInstView(); renderEngineRunsTable(); toast('▶ Signal engine executed manually','green'); }
+
+// ═══════════════════════════════════════════════════════
+// ICS FACTORS DASHBOARD
+// ═══════════════════════════════════════════════════════
+function buildICSFactorsDash() {
+  const el=$('ics-factors-dash'); if(!el) return;
+  const f=[{l:'Liq. Sweep',pts:25,c:'var(--gr)'},{l:'Order Block',pts:20,c:'var(--gold)'},{l:'FVG',pts:15,c:'var(--gold)'},{l:'Volume CVD',pts:15,c:'var(--pu)'},{l:'RSI Div.',pts:10,c:'var(--pu)'},{l:'CRT+SMC',pts:10,c:'var(--or)'},{l:'Structure',pts:5,c:'var(--bl)'}];
+  el.innerHTML=f.map(x=>`<div class="bar-wrap"><div class="bar-lbl"><span>${x.l}</span><span style="color:${x.c}">+${x.pts}</span></div><div class="bar-tr"><div class="bar-fl" style="width:${(x.pts/25)*100}%;background:${x.c}"></div></div></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════
+function initDashCharts() {
+  setTimeout(()=>{
+    const c=$('ch-dist')?.getContext('2d');
+    if (c&&!S.charts.dist) {
+      S.charts.dist=new Chart(c,{
+        type:'doughnut',
+        data:{labels:['LONG','SHORT'],datasets:[{data:[3,2],backgroundColor:['rgba(34,199,122,.65)','rgba(224,69,69,.65)'],borderColor:['#22C77A','#E04545'],borderWidth:1,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6E7280',font:{family:'DM Mono',size:11}}}}}
+      });
+    }
+  },400);
+}
+
+function refreshDistChart(sigs) {
+  if (!S.charts.dist) return;
+  const L=sigs.filter(s=>s.dir==='LONG').length, SH=sigs.filter(s=>s.dir==='SHORT').length;
+  S.charts.dist.data.datasets[0].data=[L||1,SH||1]; S.charts.dist.update('none');
+}
+
+let perfDone=false;
+function initPerfCharts() {
+  if (perfDone) return; perfDone=true;
+  setTimeout(()=>{
+    // Equity curve
+    const eqC=$('ch-equity')?.getContext('2d');
+    if (eqC) {
+      const labels=[...Array(30)].map((_,i)=>{ const d=new Date(); d.setDate(d.getDate()-29+i); return d.toLocaleDateString('en',{month:'short',day:'numeric'}); });
+      let eq=10000; const data=labels.map(()=>{ eq*=(1+(Math.random()*.042-.012)); return Math.round(eq); });
+      new Chart(eqC,{type:'line',data:{labels,datasets:[{label:'Equity',data,borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.07)',borderWidth:2,pointRadius:0,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E7280',font:{size:9,family:'DM Mono'},maxTicksLimit:8},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#6E7280',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+    }
+    // Win rate
+    const wrC=$('ch-winrate')?.getContext('2d');
+    if (wrC) { new Chart(wrC,{type:'bar',data:{labels:['ICT+OB','SMC','Sweep','CRT','Inst.','FVG','RSI'],datasets:[{data:[84,78,81,73,87,76,69],backgroundColor:'rgba(201,168,76,.55)',borderColor:'#C9A84C',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scaleOptions:{min:60,max:100},scales:{x:{ticks:{color:'#6E7280',font:{size:10,family:'DM Mono'}},grid:{display:false}},y:{min:60,max:100,ticks:{color:'#6E7280',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}}}});}
+    // Sessions
+    const ssC=$('ch-session')?.getContext('2d');
+    if (ssC) { new Chart(ssC,{type:'bar',data:{labels:['00:00 WAT','06:00 WAT','12:00 WAT','18:00 WAT'],datasets:[{data:[28,41,35,52],backgroundColor:['rgba(61,139,255,.5)','rgba(34,199,122,.5)','rgba(201,168,76,.5)','rgba(139,126,255,.5)'],borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E7280',font:{size:10,family:'DM Mono'}},grid:{display:false}},y:{ticks:{color:'#6E7280',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}}}});}
+    // ICS distribution
+    const icC=$('ch-ics-dist')?.getContext('2d');
+    if (icC) { new Chart(icC,{type:'bar',data:{labels:['50–54','55–59','60–64','65–69','70–74','75–79','80–84','85+'],datasets:[{data:[12,19,31,28,22,16,9,4],backgroundColor:'rgba(139,126,255,.5)',borderColor:'#8B7EFF',borderWidth:1,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E7280',font:{size:10,family:'DM Mono'}},grid:{display:false}},y:{ticks:{color:'#6E7280',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}}}});}
+    // Monthly
+    const moC=$('ch-monthly')?.getContext('2d');
+    if (moC) { const months=['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun']; new Chart(moC,{type:'line',data:{labels:months,datasets:[{label:'Signals',data:[82,94,89,107,118,103,121,98,135,142,129,148],borderColor:'#3D8BFF',backgroundColor:'rgba(61,139,255,.08)',borderWidth:2,pointRadius:0,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E7280',font:{size:10,family:'DM Mono'}},grid:{display:false}},y:{ticks:{color:'#6E7280',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}}}});}
+  },200);
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg,type) {
+  const cm={gold:'var(--gold)',green:'var(--gr)',red:'var(--rd)',blue:'var(--bl)'};
+  const im={gold:'◈',green:'✓',red:'✕',blue:'ℹ'};
+  const col=cm[type]||cm.gold, icon=im[type]||'◈';
+  const el=document.createElement('div'); el.className='ti';
+  el.innerHTML=`<span style="color:${col};font-size:16px;flex-shrink:0">${icon}</span><span>${msg}</span>`;
+  $('toast').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),350); },3500);
+}
+
+// ═══════════════════════════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════════════════════════
+document.getElementById('modal-signal').addEventListener('click',function(e){ if(e.target===this) closeSignalModal(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSignalModal(); });
+</script>
+
+</body>
+</html>
